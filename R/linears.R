@@ -1,9 +1,4 @@
 single_linear = function(data, NC, Treatment) {
-    label = paste(c(NC, Treatment), collapse = " vs ");
-    # 创建结果存储目录
-    # dir.create(label);
-    # setwd(label);
-
     # 初始化结果存储
     results_df <- data.frame(
         Metabolite = character(0),
@@ -168,12 +163,10 @@ single_linear = function(data, NC, Treatment) {
         ggsave("Top10_ROCs_Combined.pdf", width = 8, height = 6)
     }
 
-    # 导出结果到Excel
-    write.xlsx(results_df, "Metabolite_Regression_Results.xlsx")
-
     # 输出前10名代谢物
     cat("Top 10 Metabolites by AUC:\n")
     print(head(results_df, 10));
 
-    invisible(NULL);
+    # 导出结果到Excel
+    write.xlsx(results_df, "Metabolite_Regression_Results.xlsx");
 }
