@@ -1,6 +1,6 @@
 marker = function(file_path, class, sel_features = NULL, training_size = 0.7, top_features = 6, save_dir= "./") {
     # 1. 加载数据
-    data <- read.csv(file_path,  row.names = 1, check.names = FALSE);
+    data <- dataframe(data = file_path);
     preprocessed <- preprocess_data(data[data$class %in% class,]);
     X <- preprocessed$X
     y <- preprocessed$y
