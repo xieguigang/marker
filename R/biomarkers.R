@@ -142,31 +142,31 @@ ensemble_model <- function(X, y, selected_features) {
   X$prob_glm <- predict(nomogram_model, X[,selected_features], type = "response");
   X$prob_xgb <- predict(xgb_model, as.matrix(X[,selected_features]));
   X$prob_rf <- predict(rf_model, as.matrix( X[,selected_features]));  # 获取阳性概率
-  
+
   # 计算决策曲线
   thresholds <- seq(0, 0.5, by = 0.01)  # 设置合理的阈值范围
-  
+
   dca_glm <- decision_curve(
     class ~ prob_glm,
     data = X,
     thresholds = thresholds,
     bootstraps = 50
   )
-  
+
   dca_xgb <- decision_curve(
     class ~ prob_xgb,
     data = X,
     thresholds = thresholds,
     bootstraps = 50
   )
-  
+
   dca_rf <- decision_curve(
     class ~ prob_rf,
     data = X,
     thresholds = thresholds,
     bootstraps = 50
   )
-  
+
   pdf("./decision_curve.pdf", width = 12, height = 9)  # 单位：英寸
   # 绘制决策曲线
   plot_decision_curve(
@@ -180,26 +180,26 @@ ensemble_model <- function(X, y, selected_features) {
     ylab = "Net Benefit"
   )
   dev.off();
-  
+
     # 1. 保存逻辑回归模型
   saveRDS(nomogram_model, file = file.path(model_dir, "logistic_model.rds"))
-  
+
   # 2. 保存XGBoost模型（需额外保存特征名）
   xgb.save(xgb_model, file.path(model_dir, "xgb_model.model"))
   writeLines(
     jsonlite::toJSON(list(features = selected_features)),
     file.path(model_dir, "xgb_features.json")
   )
-  
+
   # 3. 保存随机森林模型
   saveRDS(rf_model, file = file.path(model_dir, "rf_model.rds"))
-  
+
   # 4. 保存SHAP解释器（可选）
   shap_data <- list(
     features = selected_features,
     baseline = mean(predict(xgb_model, as.matrix(X[, selected_features]))));
   saveRDS(shap_data, file.path(model_dir, "shap_data.rds"))
-  
+
   # 保存模型元数据
   metadata <- list(
     save_date = Sys.Date(),
@@ -208,14 +208,14 @@ ensemble_model <- function(X, y, selected_features) {
   )
   saveRDS(metadata, file.path(model_dir, "model_metadata.rds"))
   ######################################################
-  
-  
+
+
   # 在ensemble_model函数中添加以下代码（在保存模型之后，返回结果之前）
-  
+
   # 绘制校准曲线
   pdf("./calibration_curves.pdf", width = 10, height = 6)
   par(mfrow = c(1, 3))  # 一行三列的布局
-  
+
   # 1. 逻辑回归校准曲线
   calibration_data_glm <- data.frame(
     predicted = X$prob_glm,
@@ -229,15 +229,15 @@ ensemble_model <- function(X, y, selected_features) {
       mean_actual = mean(actual),
       n = n()
     )
-  
-  plot(calibration_data_glm$mean_pred, calibration_data_glm$mean_actual, 
-       xlim = c(0, 1), ylim = c(0, 1), 
-       xlab = "预测概率", ylab = "实际比例", 
+
+  plot(calibration_data_glm$mean_pred, calibration_data_glm$mean_actual,
+       xlim = c(0, 1), ylim = c(0, 1),
+       xlab = "预测概率", ylab = "实际比例",
        main = "逻辑回归校准曲线",
        col = "blue", pch = 19, cex = 1.5)
   abline(0, 1, col = "red", lty = 2, lwd = 2)
   lines(calibration_data_glm$mean_pred, calibration_data_glm$mean_actual, col = "blue", lwd = 2)
-  
+
   # 2. XGBoost校准曲线
   calibration_data_xgb <- data.frame(
     predicted = X$prob_xgb,
@@ -251,15 +251,15 @@ ensemble_model <- function(X, y, selected_features) {
       mean_actual = mean(actual),
       n = n()
     )
-  
-  plot(calibration_data_xgb$mean_pred, calibration_data_xgb$mean_actual, 
-       xlim = c(0, 1), ylim = c(0, 1), 
-       xlab = "预测概率", ylab = "实际比例", 
+
+  plot(calibration_data_xgb$mean_pred, calibration_data_xgb$mean_actual,
+       xlim = c(0, 1), ylim = c(0, 1),
+       xlab = "预测概率", ylab = "实际比例",
        main = "XGBoost校准曲线",
        col = "green", pch = 19, cex = 1.5)
   abline(0, 1, col = "red", lty = 2, lwd = 2)
   lines(calibration_data_xgb$mean_pred, calibration_data_xgb$mean_actual, col = "green", lwd = 2)
-  
+
   # 3. 随机森林校准曲线
   calibration_data_rf <- data.frame(
     predicted = X$prob_rf,
@@ -273,47 +273,47 @@ ensemble_model <- function(X, y, selected_features) {
       mean_actual = mean(actual),
       n = n()
     )
-  
-  plot(calibration_data_rf$mean_pred, calibration_data_rf$mean_actual, 
-       xlim = c(0, 1), ylim = c(0, 1), 
-       xlab = "预测概率", ylab = "实际比例", 
+
+  plot(calibration_data_rf$mean_pred, calibration_data_rf$mean_actual,
+       xlim = c(0, 1), ylim = c(0, 1),
+       xlab = "预测概率", ylab = "实际比例",
        main = "随机森林校准曲线",
        col = "purple", pch = 19, cex = 1.5)
   abline(0, 1, col = "red", lty = 2, lwd = 2)
   lines(calibration_data_rf$mean_pred, calibration_data_rf$mean_actual, col = "purple", lwd = 2)
-  
+
   dev.off()
-  
+
   # 使用ggplot2绘制更美观的校准曲线（可选）
 
-  
+
   # 合并三个模型的校准数据
   calibration_data_all <- bind_rows(
     mutate(calibration_data_glm, Model = "逻辑回归"),
     mutate(calibration_data_xgb, Model = "XGBoost"),
     mutate(calibration_data_rf, Model = "随机森林")
   )
-  
+
   # 绘制组合校准曲线
   p <- ggplot(calibration_data_all, aes(x = mean_pred, y = mean_actual, color = Model)) +
     geom_point(aes(size = n), alpha = 0.7) +
     geom_line(aes(group = Model), size = 1) +
     geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
     scale_color_manual(values = c("逻辑回归" = "blue", "XGBoost" = "green", "随机森林" = "purple")) +
-    labs(x = "平均预测概率", y = "实际事件比例", 
+    labs(x = "平均预测概率", y = "实际事件比例",
          title = "模型校准曲线比较",
          subtitle = "理想情况应接近对角线") +
     xlim(0, 1) + ylim(0, 1) +
     theme_minimal() +
     theme(legend.position = "bottom")
-  
+
   ggsave("./combined_calibration_curve.pdf", plot = p, width = 10, height = 8)
-  
+
   # 将校准数据保存到Excel
   calibration_data_all$bin <- as.character(calibration_data_all$bin)
   write.xlsx(calibration_data_all, file = "./calibration_data.xlsx")
-  
-  
+
+
   return(list(
     nomogram = nomogram_model,
     auc = roc_auc,
@@ -329,25 +329,25 @@ evaluate_model <- function(class, pred_prob) {
   # 将数值标签转换为因子
   actual_class <- factor(ifelse(class > 0.5, "Yes", "No"), levels = c("No", "Yes"))
   predict_class <- factor(ifelse(pred_prob > 0.5, "Yes", "No"), levels = c("No", "Yes"))
-  
+
   # 计算混淆矩阵
   cm <- confusionMatrix(predict_class, actual_class, positive = "Yes")
-  
+
   # 计算所有指标
   auc_val <- auc(roc(class, pred_prob))
-  
+
   # 计算PPV和NPV
   tp <- cm$table["Yes", "Yes"]
   fp <- cm$table["Yes", "No"]
   tn <- cm$table["No", "No"]
   fn <- cm$table["No", "Yes"]
-  
+
   ppv <- tp / (tp + fp)
   npv <- tn / (tn + fn)
-  
+
   # 计算Brier分数
   brier <- mean((pred_prob - class)^2)
-  
+
   list(
     accuracy = cm$overall["Accuracy"],
     sensitivity = cm$byClass["Sensitivity"],
@@ -391,38 +391,38 @@ visualize_results <- function(results, X, y,top_features) {
   model_test = cbind(model_test, nomogram_model = pred_prob);
   # 计算AUC值并设置为标题
   auc_value <- round(auc(roc_obj), 4)  # 保留4位小数
-  plot(roc_obj, 
+  plot(roc_obj,
        main = paste("ROC Curve (AUC =", auc_value, ")"),  # 设置标题[1,5](@ref)
-       print.auc = TRUE, 
-       auc.polygon = TRUE, 
+       print.auc = TRUE,
+       auc.polygon = TRUE,
        auc.polygon.col = "white",  # 多边形颜色改为白色[8](@ref)
        col = "#1c61b6",  # 曲线颜色（可选）
        lwd = 2)  # 曲线粗细（可选）
   dev.off();
 
   pdf(file = "./nomogram_model_train_test.pdf");
-  
+
   plot(roc_nomogram, col = "blue", lwd = 2, main = "Train & Test ROC Curves",
        xlab = "False Positive Rate", ylab = "True Positive Rate")
   lines(train_roc, col = "red", lwd = 2)
-  
+
   legend("bottomright",
          legend = c(paste("Train Data (AUC =", round(auc(train_roc), 3), ")"),
                     paste("Test Data (AUC =", round(auc(roc_nomogram), 3), ")")
          ),
          col = c("blue", "red"), lty = 1, lwd = 2)
-  
+
   dev.off();
-  
-  
-  
+
+
+
   pdf(file = "./roc_xgb_model.pdf");
 
   # 获取预测概率
   # pred_prob <- predict(nomogram_model, type = "response")
   pred_prob <- predict(xgb_model, as.matrix(X[,top_features]));
   train_prob <- predict(xgb_model,as.matrix(train_data[,top_features]));
-  
+
   # 绘制ROC曲线
   train_roc <- roc(train_data$class, train_prob);
   roc_obj <- roc(dX$class, pred_prob)
@@ -432,10 +432,10 @@ visualize_results <- function(results, X, y,top_features) {
   model_test = cbind(model_test, xgb_model = pred_prob);
   # 计算AUC值并设置为标题
   auc_value <- round(auc(roc_obj), 4)  # 保留4位小数
-  plot(roc_obj, 
+  plot(roc_obj,
        main = paste("ROC Curve (AUC =", auc_value, ")"),  # 设置标题[1,5](@ref)
-       print.auc = TRUE, 
-       auc.polygon = TRUE, 
+       print.auc = TRUE,
+       auc.polygon = TRUE,
        auc.polygon.col = "white",  # 多边形颜色改为白色[8](@ref)
        col = "#1c61b6",  # 曲线颜色（可选）
        lwd = 2)  # 曲线粗细（可选）
@@ -444,21 +444,21 @@ visualize_results <- function(results, X, y,top_features) {
   dev.off();
 
   pdf(file = "./xgb_model_train_test.pdf");
-  
+
   plot(roc_xgb, col = "blue", lwd = 2, main = "Train & Test ROC Curves",
        xlab = "False Positive Rate", ylab = "True Positive Rate")
   lines(train_roc, col = "red", lwd = 2)
-  
+
   legend("bottomright",
          legend = c(paste("Train Data (AUC =", round(auc(train_roc), 3), ")"),
                     paste("Test Data (AUC =", round(auc(roc_xgb), 3), ")")
          ),
          col = c("blue", "red"), lty = 1, lwd = 2)
-  
+
   dev.off();
-  
-  
-  
+
+
+
   pdf(file = "./roc_rf_model.pdf");
 
   # 获取预测概率
@@ -474,10 +474,10 @@ visualize_results <- function(results, X, y,top_features) {
   model_test = cbind(model_test, rf_model = pred_prob);
   # 计算AUC值并设置为标题
   auc_value <- round(auc(roc_obj), 4)  # 保留4位小数
-  plot(roc_obj, 
+  plot(roc_obj,
        main = paste("ROC Curve (AUC =", auc_value, ")"),  # 设置标题[1,5](@ref)
-       print.auc = TRUE, 
-       auc.polygon = TRUE, 
+       print.auc = TRUE,
+       auc.polygon = TRUE,
        auc.polygon.col = "white",  # 多边形颜色改为白色[8](@ref)
        col = "#1c61b6",  # 曲线颜色（可选）
        lwd = 2)  # 曲线粗细（可选）
@@ -486,20 +486,20 @@ visualize_results <- function(results, X, y,top_features) {
   dev.off();
 
   pdf(file = "./rf_model_train_test.pdf");
-  
+
   plot(roc_xgb, col = "blue", lwd = 2, main = "Train & Test ROC Curves",
        xlab = "False Positive Rate", ylab = "True Positive Rate")
   lines(train_roc, col = "red", lwd = 2)
-  
+
   legend("bottomright",
          legend = c(paste("Train Data (AUC =", round(auc(train_roc), 3), ")"),
                     paste("Test Data (AUC =", round(auc(roc_rf ), 3), ")")
          ),
          col = c("blue", "red"), lty = 1, lwd = 2)
-  
+
   dev.off();
-  
-  
+
+
   # 计算每个模型在训练集和测试集上的性能指标
   calculate_metrics <- function(model, features, data_type = "test") {
     # 根据数据类型选择数据集
@@ -510,7 +510,7 @@ visualize_results <- function(results, X, y,top_features) {
       data <- as.data.frame(X)
       actual <- as.numeric(y) - 1
     }
-    
+
     # 获取预测概率
     if (inherits(model, "glm")) {
       pred_prob <- predict(model, data[, features], type = "response")
@@ -519,30 +519,30 @@ visualize_results <- function(results, X, y,top_features) {
     } else {
       pred_prob <- predict(model, as.matrix(data[, features]))
     }
-    
+
     # 评估模型
     evaluate_model(actual, pred_prob)
   }
-  
+
   # 为每个模型计算训练集和测试集指标
   model_metrics <- list()
-  
+
   models <- list(
     logistic = results$nomogram,
     xgb = results$xgb,
     rf = results$rf_model
   )
-  
+
   for (model_name in names(models)) {
     # 测试集指标
     test_metrics <- calculate_metrics(models[[model_name]], top_features, "test")
     # 训练集指标
     train_metrics <- calculate_metrics(models[[model_name]], top_features, "train")
-    
+
     model_metrics[[paste0(model_name, "_test")]] <- test_metrics
     model_metrics[[paste0(model_name, "_train")]] <- train_metrics
   }
-  
+
   # 创建结果数据框
   results_df <- data.frame(
     Model = rep(c("Logistic", "XGBoost", "Random Forest"), each = 2),
@@ -593,7 +593,7 @@ visualize_results <- function(results, X, y,top_features) {
       model_metrics$rf_train$brier, model_metrics$rf_test$brier
     )
   )
-  
+
   # 保存到Excel
   write.xlsx(results_df, file = "./model_compares.xlsx")
 
@@ -705,52 +705,52 @@ visualize_results <- function(results, X, y,top_features) {
 # 新增模型加载函数
 load_ensemble_models <- function(model_dir = "saved_models") {
   models <- list()
-  
+
   # 1. 加载逻辑回归模型
   if (file.exists(file.path(model_dir, "logistic_model.rds"))) {
     models$nomogram <- readRDS(file.path(model_dir, "logistic_model.rds"))
   }
-  
+
   # 2. 加载XGBoost模型及特征
   if (file.exists(file.path(model_dir, "xgb_model.model"))) {
     models$xgb <- xgb.load(file.path(model_dir, "xgb_model.model"))
     feature_json <- jsonlite::fromJSON(file.path(model_dir, "xgb_features.json"))
     models$xgb_features <- feature_json$features
   }
-  
+
   # 3. 加载随机森林模型
   if (file.exists(file.path(model_dir, "rf_model.rds"))) {
     models$rf <- readRDS(file.path(model_dir, "rf_model.rds"))
   }
-  
+
   # 4. 加载元数据
   if (file.exists(file.path(model_dir, "model_metadata.rds"))) {
     models$metadata <- readRDS(file.path(model_dir, "model_metadata.rds"))
   }
-  
+
   return(models)
 }
 
 # 使用保存的模型进行预测
 predict_with_saved_model <- function(new_data, model_dir = "saved_models") {
   models <- load_ensemble_models(model_dir)
-  
+
   # 确保新数据特征与训练时一致
   new_data <- new_data[, models$metadata$features_used]
-  
+
   # XGBoost预测
   xgb_pred <- predict(models$xgb, as.matrix(new_data))
-  
+
   # 逻辑回归预测
   lr_pred <- predict(models$nomogram, as.data.frame(new_data), type = "response")
-  
+
   # 随机森林预测
   rf_pred <- predict(models$rf, as.matrix( new_data));
-  
+
   data.frame(
-    xgb = xgb_pred, 
-	lr = lr_pred, 
-	rf = rf_pred, 
+    xgb = xgb_pred,
+	lr = lr_pred,
+	rf = rf_pred,
 	row.names = rownames(new_data)
   );
 }
@@ -765,7 +765,7 @@ main_manual = function(file_path, class, sel_features = NULL, save_dir=NULL) {
 
   if (is.null(save_dir)) {
     name = dirname(file_path); # paste(class, collapse = " vs ");
-  }  
+  }
 
   print(name);
   print(sel_features);
@@ -778,7 +778,7 @@ main_manual = function(file_path, class, sel_features = NULL, save_dir=NULL) {
     lasso_result <- run_lasso(X, y)
     rf_result <- run_random_forest(X, y)
     svm_result <- run_svm_rfe(X, y)
-    
+
     combined <- c(as.character(lasso_result$features), as.character(rf_result$features), as.character(svm_result$features))
     # 统计次数并降序排序
     counts <- sort(table(combined), decreasing = TRUE)
@@ -787,7 +787,7 @@ main_manual = function(file_path, class, sel_features = NULL, save_dir=NULL) {
   } else {
     top_features <- sel_features;
   }
-  
+
   split_idx <- createDataPartition(y, p = 0.7, list = FALSE)[,1];
   X = as.data.frame(X);
 
@@ -806,6 +806,3 @@ main_manual = function(file_path, class, sel_features = NULL, save_dir=NULL) {
 
   setwd("..");
 }
-
-# main("./factors.csv");
-main_manual("./data.csv", c( "阴性","阳性"), save_dir="机器学习");
