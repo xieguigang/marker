@@ -1,3 +1,50 @@
+#' Evaluate Performance of a Binary Classification Model
+#'
+#' This function computes a comprehensive set of performance metrics for a binary classification model, utilizing both the observed class labels and the predicted probabilities.
+#'
+#' @param class A numeric vector of the true observed values. Typically, these are 0s and 1s, where 1 represents the positive class. The function will internally convert values greater than 0.5 to the "Yes" class.
+#' @param pred_prob A numeric vector of the predicted probabilities for the positive class ("Yes"). Each element should be between 0 and 1.
+#'
+#' @return A list containing the following performance metrics:
+#' \itemize{
+#'   \item \code{accuracy}: Overall accuracy of the predictions. Calculated as (TP + TN) / (TP + TN + FP + FN).
+#'   \item \code{sensitivity} (Recall/True Positive Rate): The ability of the model to correctly identify positive observations. Calculated as TP / (TP + FN).
+#'   \item \code{specificity} (True Negative Rate): The ability of the model to correctly identify negative observations. Calculated as TN / (TN + FP).
+#'   \item \code{ppv} (Positive Predictive Value/Precision): The proportion of positive predictions that are actually correct. Calculated as TP / (TP + FP).
+#'   \item \code{npv} (Negative Predictive Value): The proportion of negative predictions that are actually correct. Calculated as TN / (TN + FN).
+#'   \item \code{f1}: The harmonic mean of precision and recall. Calculated as 2 * (Precision * Recall) / (Precision + Recall).
+#'   \item \code{kappa}: Cohen's Kappa statistic, which measures agreement between predictions and true labels while accounting for chance.
+#'   \item \code{auc}: The Area Under the Receiver Operating Characteristic (ROC) Curve. A measure of the model's ability to discriminate between classes.
+#'   \item \code{brier}: The Brier score, which measures the mean squared difference between the predicted probabilities and the actual outcomes. Lower values indicate better calibration.
+#' }
+#'
+#' @details
+#' The function first converts the numeric \code{class} and \code{pred_prob} vectors into factors with levels "No" and "Yes", using a threshold of 0.5. It then calculates a confusion matrix and derives various metrics from it. Additionally, it computes the AUC from the ROC curve and the Brier score for probability calibration.
+#'
+#' @note
+#' This function requires the following packages to be installed and loaded: `caret` (for `confusionMatrix`), `pROC` (for `roc` and `auc`), or equivalent functions that provide these functionalities.
+#'
+#' @seealso
+#' \code{\link[caret]{confusionMatrix}}, \code{\link[pROC]{roc}}, \code{\link[pROC]{auc}}
+#'
+#' @examples
+#' \dontrun{
+#' # Generate some example data
+#' set.seed(123)
+#' true_labels <- sample(c(0, 1), 100, replace = TRUE)
+#' predicted_probs <- runif(100) # Random probabilities for demonstration
+#'
+#' # Evaluate the model
+#' results <- evaluate_model(class = true_labels, pred_prob = predicted_probs)
+#'
+#' # Print the results
+#' print(results)
+#'
+#' # Access a specific metric, e.g., AUC
+#' print(paste("AUC:", results$auc))
+#' }
+#'
+#' @export
 evaluate_model <- function(class, pred_prob) {
     # 将数值标签转换为因子
     actual_class <- factor(ifelse(class > 0.5, "Yes", "No"), levels = c("No", "Yes"))
