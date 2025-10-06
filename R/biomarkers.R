@@ -73,6 +73,7 @@ marker = function(file_path, class, sel_features = NULL, training_size = 0.7, to
 
     plot_pca(df = data, dirsave = save_dir);
     single_linear(data, NC = class[1], Treatment = class[2]);
+    stats_data(data, CON = class[1], treatment = class[2], save_dir = save_dir);
 
     print(name);
     print(sel_features);
