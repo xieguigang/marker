@@ -70,7 +70,8 @@
     library(xlsx);
     library(openxlsx)
     library(rmda)
-
+    library(ggsignif)  # 用于添加显著性标记
+    library(rstatix)   # 用于添加统计检验结果
     library(showtext)
 
     # fix for the zh-cn chars display problem in pdf drawing
