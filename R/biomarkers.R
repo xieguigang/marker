@@ -1,26 +1,3 @@
-# 加载必要包
-library(ggplot2)
-library(glmnet)
-library(randomForest)
-library(e1071)
-library(caret)
-library(pheatmap)
-library(ggcorrplot)
-library(dplyr)
-library(tidyverse)
-library(randomForest)
-library(xgboost)
-library(SHAPforxgboost)
-library(pROC)
-library(caret)
-library(ggthemes)
-library(xlsx);
-library(openxlsx)
-library(rmda) 
-
-library(showtext)
-showtext_auto(enable = TRUE)
-
 # 使用5种机器学习方法进行分类问题建模
 #
 # 1. lasso, random forest, svm 三种机器学习方法筛选出最重要的5个特征
@@ -347,7 +324,7 @@ ensemble_model <- function(X, y, selected_features) {
   dev.off()
   
   # 使用ggplot2绘制更美观的校准曲线（可选）
-  library(ggplot2)
+
   
   # 合并三个模型的校准数据
   calibration_data_all <- bind_rows(
@@ -439,7 +416,7 @@ visualize_results <- function(results, X, y,top_features) {
                           row.names = rownames(X));
 
   pdf(file = "./roc_nomogram_model.pdf");
-  library(pROC)
+
   # 获取预测概率
   # pred_prob <- predict(nomogram_model, type = "response")
   pred_prob <- predict(nomogram_model, X[,top_features], type = "response");
@@ -479,7 +456,7 @@ visualize_results <- function(results, X, y,top_features) {
   
   
   pdf(file = "./roc_xgb_model.pdf");
-  library(pROC)
+
   # 获取预测概率
   # pred_prob <- predict(nomogram_model, type = "response")
   pred_prob <- predict(xgb_model, as.matrix(X[,top_features]));
@@ -522,7 +499,7 @@ visualize_results <- function(results, X, y,top_features) {
   
   
   pdf(file = "./roc_rf_model.pdf");
-  library(pROC)
+
   # 获取预测概率
   # pred_prob <- predict(nomogram_model, type = "response")
   pred_prob <- predict(rf_model, as.matrix( X[,top_features]));
@@ -695,7 +672,7 @@ visualize_results <- function(results, X, y,top_features) {
   # plot(cal)
 
   pdf(file = "./feature_importance.pdf");
-  library(ggplot2)
+
   coef_df <- data.frame(
     Feature = names(coefficients(nomogram_model))[-1],
     Importance = abs(coefficients(nomogram_model)[-1])
