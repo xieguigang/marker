@@ -3,8 +3,8 @@
 #' This function performs data cleaning and preprocessing on a dataset intended for machine learning tasks. It handles missing values, optional normalization of numeric features, and separates the data into feature matrix and label vector.
 #'
 #' @param data A data frame containing the raw dataset. It must include a column named `class` which represents the target variable.
-#' @param remove_na Logical, indicating whether to remove rows with missing values in the `class` column. **Note:** This parameter is currently not utilized in the function logic; rows with `NA` in `class` are always removed[1,5](@ref).
-#' @param normalize Logical, indicating whether to normalize numeric feature columns by dividing by their maximum value (scaling to [0, 1]). Default is `TRUE`[1,3](@ref).
+#' @param remove_na Logical, indicating whether to remove rows with missing values in the `class` column. **Note:** This parameter is currently not utilized in the function logic; rows with `NA` in `class` are always removed.
+#' @param normalize Logical, indicating whether to normalize numeric feature columns by dividing by their maximum value (scaling to [0, 1]). Default is `TRUE`.
 #' @param labels A character vector specifying the factor levels for the `class` column, defining the order of groups (e.g., control group first). Default is `c("CON", "Treatment")`.
 #'
 #' @return A list containing the following components:
@@ -22,7 +22,7 @@
 #'   \item **Normalization:** If `normalize = TRUE`, each numeric feature column is divided by its maximum value to scale the data between 0 and 1.
 #'   \item **Data Splitting:** The dataset is split into a numeric matrix `X` (features) and a factor vector `y` (labels).
 #' }
-#' Non-numeric columns other than `class` may cause errors during conversion to matrix and are not explicitly handled in the current function[5](@ref).
+#' Non-numeric columns other than `class` may cause errors during conversion to matrix and are not explicitly handled in the current function.
 #'
 #' @examples
 #' \dontrun{
@@ -43,7 +43,7 @@
 #' }
 #'
 #' @seealso
-#' For more advanced preprocessing options (e.g., PCA, centering, scaling), see the \code{\link[caret]{preProcess}} function in the `caret` package[1,3](@ref).
+#' For more advanced preprocessing options (e.g., PCA, centering, scaling), see the \code{\link[caret]{preProcess}} function in the `caret` package.
 #'
 #' @export
 preprocess_data <- function(data, remove_na = TRUE, normalize = TRUE, labels = c("CON","Treatment")) {

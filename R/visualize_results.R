@@ -29,10 +29,10 @@ visualize_results <- function(results, X, y,top_features) {
     # 计算AUC值并设置为标题
     auc_value <- round(auc(roc_obj), 4)  # 保留4位小数
     plot(roc_obj,
-         main = paste("ROC Curve (AUC =", auc_value, ")"),  # 设置标题[1,5](@ref)
+         main = paste("ROC Curve (AUC =", auc_value, ")"),  # 设置标题
          print.auc = TRUE,
          auc.polygon = TRUE,
-         auc.polygon.col = "white",  # 多边形颜色改为白色[8](@ref)
+         auc.polygon.col = "white",  # 多边形颜色改为白色
          col = "#1c61b6",  # 曲线颜色（可选）
          lwd = 2)  # 曲线粗细（可选）
     dev.off();
@@ -70,10 +70,10 @@ visualize_results <- function(results, X, y,top_features) {
     # 计算AUC值并设置为标题
     auc_value <- round(auc(roc_obj), 4)  # 保留4位小数
     plot(roc_obj,
-         main = paste("ROC Curve (AUC =", auc_value, ")"),  # 设置标题[1,5](@ref)
+         main = paste("ROC Curve (AUC =", auc_value, ")"),  # 设置标题
          print.auc = TRUE,
          auc.polygon = TRUE,
-         auc.polygon.col = "white",  # 多边形颜色改为白色[8](@ref)
+         auc.polygon.col = "white",  # 多边形颜色改为白色
          col = "#1c61b6",  # 曲线颜色（可选）
          lwd = 2)  # 曲线粗细（可选）
     # 添加交叉验证的AUC值
@@ -112,10 +112,10 @@ visualize_results <- function(results, X, y,top_features) {
     # 计算AUC值并设置为标题
     auc_value <- round(auc(roc_obj), 4)  # 保留4位小数
     plot(roc_obj,
-         main = paste("ROC Curve (AUC =", auc_value, ")"),  # 设置标题[1,5](@ref)
+         main = paste("ROC Curve (AUC =", auc_value, ")"),  # 设置标题
          print.auc = TRUE,
          auc.polygon = TRUE,
-         auc.polygon.col = "white",  # 多边形颜色改为白色[8](@ref)
+         auc.polygon.col = "white",  # 多边形颜色改为白色
          col = "#1c61b6",  # 曲线颜色（可选）
          lwd = 2)  # 曲线粗细（可选）
     # 添加交叉验证的AUC值
