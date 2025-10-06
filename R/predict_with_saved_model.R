@@ -45,13 +45,14 @@
 #'   \item This function is designed for classification tasks and returns probability scores.
 #' }
 #'
+#' importFrom xgboost predict
+#' importFrom stats predict
+#' importFrom randomForest predict
+#' 
 #' @seealso
 #' \code{\link{save_ensemble_models}} for saving ensemble models
 #' \code{\link[stats]{predict}} for the generic predict function
 #' 
-#' @importFrom xgboost predict
-#' @importFrom stats predict
-#' @importFrom randomForest predict
 #' 
 #' @export
 predict_with_saved_model <- function(new_data, model_dir = "saved_models") {
