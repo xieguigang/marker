@@ -16,7 +16,7 @@
     library(ggthemes)
     library(xlsx);
     library(openxlsx)
-    library(rmda) 
+    library(rmda)
 
     library(showtext)
 
