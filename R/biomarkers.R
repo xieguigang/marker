@@ -71,6 +71,7 @@ marker = function(file_path, class, sel_features = NULL, training_size = 0.7, to
     y <- preprocessed$y
     name = save_dir;
 
+    plot_pca(df = data, dirsave = save_dir);
     single_linear(data, NC = class[1], Treatment = class[2]);
 
     print(name);
