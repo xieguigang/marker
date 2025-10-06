@@ -3,19 +3,19 @@
 #' This function trains a random forest model using the provided feature matrix and response variable.
 #' It calculates feature importance based on the Mean Decrease Gini index and returns a filtered list of significant features,
 #' the trained model object, and the Out-of-Bag (OOB) error rate. The function is particularly useful for
-#' preliminary feature selection in high-dimensional data analysis [1,7](@ref).
+#' preliminary feature selection in high-dimensional data analysis.
 #'
 #' @param X A numeric matrix or data frame containing the predictor variables (features). 
-#'   Rows represent observations/samples, and columns represent features. This is the fixed effects matrix [6](@ref).
+#'   Rows represent observations/samples, and columns represent features. This is the fixed effects matrix.
 #' @param y A numeric vector representing the response (output) variable. Its length must equal the number of rows in `X`.
 #' @param ntree An integer specifying the number of trees to grow in the random forest. A larger number increases 
-#'   stability but also computation time. The default value is 500 [6,7](@ref).
+#'   stability but also computation time. The default value is 500.
 #'
-#' @return A list containing the following components [1,3](@ref):
+#' @return A list containing the following components:
 #'   \itemize{
 #'     \item `features` - A character vector containing the names of features whose importance (MeanDecreaseGini) is greater than 0.5. If no features exceed this threshold, returns an empty vector.
-#'     \item `model` - The full fitted random forest model object of class `randomForest`. This can be used for further inspection, prediction, or plotting [7](@ref).
-#'     \item `oob_error` - The final Out-of-Bag (OOB) error rate of the model, extracted from the last row of the `err.rate` matrix of the model. This provides an estimate of the prediction error [7](@ref).
+#'     \item `model` - The full fitted random forest model object of class `randomForest`. This can be used for further inspection, prediction, or plotting.
+#'     \item `oob_error` - The final Out-of-Bag (OOB) error rate of the model, extracted from the last row of the `err.rate` matrix of the model. This provides an estimate of the prediction error.
 #'   }
 #'
 #' @examples

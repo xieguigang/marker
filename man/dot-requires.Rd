@@ -8,7 +8,7 @@
 }
 \value{
 This function does not return a value. It is called for its side effects, which are
-attaching the specified packages to the search path and configuring `showtext`[1](@ref).
+attaching the specified packages to the search path and configuring `showtext`.
 }
 \description{
 This function loads a comprehensive set of R packages commonly used for data analysis,
@@ -26,14 +26,14 @@ The function loads packages from several key categories:
   \item **Excel File Handling**: `xlsx`, `openxlsx`
 }
 Additionally, it enables `showtext` automatic rendering to address Chinese character
-display issues in PDF graphics[4](@ref).
+display issues in PDF graphics.
 }
 \section{Side effects}{
 
 \itemize{
   \item Attaches multiple packages to the R session using `library()`.
   \item Enables `showtext_auto()` to automatically handle text rendering, which is
-  particularly useful for displaying Chinese characters in graphics[4](@ref).
+  particularly useful for displaying Chinese characters in graphics.
 }
 }
 
@@ -42,11 +42,11 @@ display issues in PDF graphics[4](@ref).
 \itemize{
   \item The function uses `library()` to attach packages, which will mask functions
   if multiple packages contain functions with the same name. It does not check if
-  packages are already installed or loaded[3](@ref).
+  packages are already installed or loaded.
   \item The package `randomForest` is loaded twice in the code; you may consider
   removing the duplicate call for efficiency.
   \item Ensure that all packages listed are installed in your R environment before
-  calling this function, as missing packages will cause errors[3](@ref).
+  calling this function, as missing packages will cause errors.
 }
 }
 
