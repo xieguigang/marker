@@ -5,6 +5,8 @@
 #' The function includes data standardization, PCA computation using singular value decomposition, 
 #' and visualization with ggplot2 including confidence ellipses and variance explained labels.
 #'
+#' importFrom stats prcomp scale
+#' 
 #' @param df A data frame containing the data for PCA analysis. Must include a column named 'class' 
 #'        containing categorical labels for grouping, with all other columns being numeric variables.
 #' @param dirsave A character string specifying the directory path where the PCA plot will be saved.
@@ -24,7 +26,6 @@
 #' @importFrom dplyr %>% select
 #' @importFrom ggplot2 ggplot aes geom_point stat_ellipse labs scale_color_manual 
 #' @importFrom ggplot2 theme_minimal theme geom_hline geom_vline ggsave
-#' @importFrom stats prcomp scale
 #' @export
 plot_pca = function(df, dirsave) {
     # ====== PCA计算核心步骤 ======

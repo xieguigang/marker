@@ -22,6 +22,8 @@ This function performs Principal Component Analysis (PCA) on a numeric data matr
 generates a score plot visualizing the first two principal components, and saves the plot to a specified directory. 
 The function includes data standardization, PCA computation using singular value decomposition, 
 and visualization with ggplot2 including confidence ellipses and variance explained labels.
+
+importFrom stats prcomp scale
 }
 \examples{
 \dontrun{
