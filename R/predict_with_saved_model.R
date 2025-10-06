@@ -1,6 +1,59 @@
 
 
-# 使用保存的模型进行预测
+#' Predict using a pre-trained ensemble model
+#'
+#' This function loads a saved ensemble model (comprising XGBoost, Logistic Regression, and Random Forest models)
+#' and generates predictions on new data. The ensemble model must have been previously saved using
+#' `save_ensemble_models()` or a compatible function.
+#'
+#' @param new_data A data.frame or matrix containing the new data to make predictions on.
+#'   It should contain all the features used during model training.
+#' @param model_dir Character string specifying the directory path where the ensemble model
+#'   components and metadata are stored. Default is "saved_models".
+#'
+#' @return A data.frame with row names corresponding to `new_data` and three columns:
+#'   \itemize{
+#'     \item \code{xgb}: Prediction probabilities from the XGBoost model
+#'     \item \code{lr}: Prediction probabilities from the Logistic Regression model  
+#'     \item \code{rf}: Prediction probabilities from the Random Forest model
+#'   }
+#'   All predictions are returned as probabilities (numeric values between 0 and 1).
+#'
+#' @examples
+#' \dontrun{
+#' # Load new data for prediction
+#' new_samples <- read.csv("new_patients.csv")
+#' 
+#' # Generate predictions using saved models
+#' predictions <- predict_with_saved_model(new_data = new_samples, 
+#'                                        model_dir = "my_models")
+#' 
+#' # View the prediction results
+#' head(predictions)
+#' 
+#' # Extract XGBoost predictions only
+#' xgb_predictions <- predictions$xgb
+#' }
+#'
+#' @note 
+#' Important considerations for use:
+#' \itemize{
+#'   \item The function assumes the ensemble model was saved using `save_ensemble_models()` 
+#'         or a compatible method that includes metadata about features used during training.
+#'   \item The new data must contain at least all the features that were used in model training.
+#'   \item Feature names and data types in `new_data` should match those used during training.
+#'   \item This function is designed for classification tasks and returns probability scores.
+#' }
+#'
+#' @seealso
+#' \code{\link{save_ensemble_models}} for saving ensemble models
+#' \code{\link[stats]{predict}} for the generic predict function
+#' 
+#' @importFrom xgboost predict
+#' @importFrom stats predict
+#' @importFrom randomForest predict
+#' 
+#' @export
 predict_with_saved_model <- function(new_data, model_dir = "saved_models") {
     models <- load_ensemble_models(model_dir)
 

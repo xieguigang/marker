@@ -1,4 +1,98 @@
-# 6. 可视化模块
+#' Comprehensive Visualization for Machine Learning Model Results
+#'
+#' This function generates a comprehensive set of visualizations and evaluations 
+#' for multiple machine learning models, including ROC curves, feature importance 
+#' plots, SHAP analysis, nomograms, and performance metrics comparison.
+#'
+#' @param results A list object containing trained model objects and evaluation metrics.
+#'   Must include the following components:
+#'   \itemize{
+#'     \item \code{nomogram} - Nomogram/Logistic regression model object
+#'     \item \code{xgb} - XGBoost model object
+#'     \item \code{rf_model} - Random Forest model object
+#'     \item \code{auc} - AUC values for models
+#'     \item \code{dX} - Training dataset
+#'     \item \code{coefficients} - Model coefficients for feature importance
+#'     \item \code{formula} - Formula used for modeling
+#'   }
+#' @param X A data frame or matrix containing feature data for test set. Rows represent
+#'   samples and columns represent features.
+#' @param y A vector containing true class labels for the test set. Should be binary 
+#'   (0/1) or factor with two levels.
+#' @param top_features A character vector or numeric index specifying the top features 
+#'   to be used for model prediction and visualization.
+#'
+#' @return Invisible NULL. The function primarily generates output files in the current
+#'   working directory:
+#'   \itemize{
+#'     \item \strong{PDF files:} Multiple visualization plots including ROC curves, 
+#'           feature importance, SHAP plots, and nomograms
+#'     \item \strong{Excel files:} Model performance metrics comparison and test 
+#'           predictions
+#'   }
+#'   Specifically generates the following files:
+#'   \itemize{
+#'     \item ROC curve PDFs: "roc_nomogram_model.pdf", "roc_xgb_model.pdf", "roc_rf_model.pdf"
+#'     \item Train-test comparison PDFs: "nomogram_model_train_test.pdf", "xgb_model_train_test.pdf", 
+#'           "rf_model_train_test.pdf"
+#'     \item Combined ROC curve: "ROC.pdf"
+#'     \item Feature importance: "feature_importance.pdf", "shap.pdf", "nomogram.pdf"
+#'     \item Performance metrics: "model_compares.xlsx", "model_test.xlsx", "model_features.xlsx"
+#'     \item SHAP results: "SHAP_Values.csv", "shap_results.xlsx"
+#'   }
+#'
+#' @examples
+#' \dontrun{
+#' # Load required libraries
+#' library(pROC)
+#' library(ggplot2)
+#' library(rms)
+#' 
+#' # Prepare sample data
+#' data(iris)
+#' iris_binary <- iris[iris$Species != "versicolor", ]
+#' X <- iris_binary[, 1:4]
+#' y <- as.numeric(iris_binary$Species) - 1
+#' top_features <- c("Petal.Length", "Petal.Width")
+#' 
+#' # Train models (simplified example)
+#' nomogram_model <- glm(y ~ Petal.Length + Petal.Width, data = cbind(X, y), 
+#'                      family = binomial)
+#' xgb_model <- xgboost::xgboost(data = as.matrix(X), label = y, nrounds = 10)
+#' rf_model <- randomForest::randomForest(x = X, y = as.factor(y))
+#' 
+#' # Create results list
+#' results <- list(
+#'   nomogram = nomogram_model,
+#'   xgb = xgb_model,
+#'   rf_model = rf_model,
+#'   auc = 0.95,
+#'   dX = cbind(X, class = y),
+#'   coefficients = coef(nomogram_model),
+#'   formula = y ~ Petal.Length + Petal.Width
+#' )
+#' 
+#' # Run visualization
+#' visualize_results(results, X, y, top_features)
+#' }
+#'
+#' @section Warning:
+#' This function will generate multiple files in the current working directory.
+#' Ensure you have write permissions and adequate disk space. The function requires
+#' several packages to be installed and loaded: \code{pROC}, \code{ggplot2}, 
+#' \code{rms}, \code{openxlsx}, \code{fastshap}, \code{shapviz}.
+#'
+#' @seealso
+#' Useful links for related packages:
+#' \itemize{
+#'   \item \code{\link[pROC]{roc}} for ROC curve analysis
+#'   \item \code{\link[ggplot2]{ggplot}} for advanced plotting
+#'   \item \code{\link[rms]{nomogram}} for nomogram creation
+#' }
+#'
+#' @author Your Name <your.email@example.com>
+#'
+#' @export
 visualize_results <- function(results, X, y,top_features) {
     nomogram_model <- results$nomogram;
     xgb_model =results$xgb;
