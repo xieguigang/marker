@@ -1,14 +1,14 @@
 #' Perform statistical test based on feature type
 #'
 #' This function automatically determines the appropriate statistical test (Fisher's exact test for binary features, 
-#' Chi-squared test for continuous features) to compare the distribution of a feature between two groups (e.g., negative vs. positive classes) [1](@ref).
+#' Chi-squared test for continuous features) to compare the distribution of a feature between two groups (e.g., negative vs. positive classes).
 #'
-#' @param feature_vector A numeric vector representing the feature values to be tested. Can contain binary (0/1) or continuous values [5](@ref).
+#' @param feature_vector A numeric vector representing the feature values to be tested. Can contain binary (0/1) or continuous values.
 #' @param class_vector A factor or character vector indicating the group membership (e.g., "Negative", "Positive") for each sample. Must be the same length as `feature_vector`.
-#' @param CON A scalar value (typically 0, or a reference level in `class_vector`) denoting the control or reference group (e.g., negative class) [1](@ref).
-#' @param treatment A scalar value (typically 1, or a test level in `class_vector`) denoting the experimental or test group (e.g., positive class) [1](@ref).
+#' @param CON A scalar value (typically 0, or a reference level in `class_vector`) denoting the control or reference group (e.g., negative class).
+#' @param treatment A scalar value (typically 1, or a test level in `class_vector`) denoting the experimental or test group (e.g., positive class).
 #'
-#' @return A list containing the following elements [1,2](@ref):
+#' @return A list containing the following elements:
 #' \itemize{
 #'   \item \code{method} - Character. Name of the statistical test performed ("Fisher exact test" for binary features, "Chi-squared" for continuous features).
 #'   \item \code{statistic} - Numeric. The test statistic (Odds Ratio for Fisher's exact test, Chi-squared statistic for Chi-squared test).
