@@ -327,17 +327,8 @@ visualize_results <- function(results, X, y,top_features) {
 
     # 保存到Excel
     write.xlsx(results_df, file = "./model_compares.xlsx")
-
     # 模型在测试集上的预测测试效果
     write.xlsx(model_test, file = "./model_test.xlsx");
-    #write.xlsx(data.frame(
-    #  模型 = c("XGBoost", "RF", "logistic"),
-    #  准确率 = sapply(results, function(x) round(x$accuracy, 3)),
-    #  AUC = sapply(results, function(x) round(x$auc, 3)),
-    #  敏感度 = sapply(results, function(x) round(x$sensitivity, 3)),
-    #  特异度 = sapply(results, function(x) round(x$specificity, 3)),
-    #  F1得分 = sapply(results, function(x) round(x$f1, 3))
-    #), file = "./model_compares.xlsx");
 
     pdf(file = "./ROC.pdf");
 
@@ -354,14 +345,6 @@ visualize_results <- function(results, X, y,top_features) {
            col = c("blue", "red", "green"), lty = 1, lwd = 2)
 
     dev.off();
-
-    # library(rms)
-    # 转换为rms包数据格式
-    # ddist <- datadist(as.data.frame(X))
-    # options(datadist = "ddist")
-    # 绘制校准曲线
-    # cal <- calibrate(nomogram_model, method = "boot", B = 1000)
-    # plot(cal)
 
     pdf(file = "./feature_importance.pdf");
 
@@ -428,7 +411,5 @@ visualize_results <- function(results, X, y,top_features) {
     plot(nom,xfrac = 0.1,cex.var = 1.5, cex.axis = 0.85   )
     dev.off();
 
-    # library(rmda)
-    # dca_data <- decision_curve(formula, data = dX, family = binomial)
-    # plot_decision_curve(dca_data, curve.names = "Our Model")
+    invisible(NULL);
 }
