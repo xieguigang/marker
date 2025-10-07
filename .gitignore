@@ -418,3 +418,4 @@ FodyWeavers.xsd
 *.msp
 .Rproj.user
 docs/marker.txt
+.RData
