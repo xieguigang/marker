@@ -1,4 +1,11 @@
 require(marker);
 
-expr = read.csv("aa55ac5e-7a48-45fd-9fb5-7e013805b247.csv", row.names = 1, check.names = FALSE);
 clusters = read.csv("clusters.csv", row.names = 1, check.names = FALSE);
+expr = read.csv("aa55ac5e-7a48-45fd-9fb5-7e013805b247.csv", row.names = 1, check.names = FALSE);
+
+merged_data <- merge(expr, clusters, by = "row.names", all.x = TRUE, sort = FALSE)
+rownames(merged_data) <- merged_data$Row.names
+merged_data$Row.names <- NULL
+names(merged_data)[names(merged_data) == "Cluster"] <- "class"
+
+marker(merged_data, class = c("class_1","class_2"), sel_features = NULL, training_size = 0.7, top_features = 9, save_dir= "./demo")
