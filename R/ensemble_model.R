@@ -74,14 +74,14 @@
 #'         Fish and Fisheries 19: 1013-42. https://doi.org/10.1111/faf.12310
 #'   \item Google's R Style Guide: https://google.github.io/styleguide/Rguide.xml
 #' }
-ensemble_model <- function(X, y, selected_features) {
+ensemble_model <- function(X, y, selected_features, save_dir) {
     # 构建列线图模型
     factors = paste("`",paste(selected_features, collapse = "`+`"),"`", sep = "");
 
-    print("view factor list:");
-    print(factors);
+    message("view factor list:");
+    message(factors);
 
-    model_dir <- "saved_models";
+    model_dir <- file.path( save_dir, "saved_models");
     if (!dir.exists(model_dir)) dir.create(model_dir);
 
     formula <- as.formula(paste("class ~ ", factors ));
@@ -106,8 +106,7 @@ ensemble_model <- function(X, y, selected_features) {
         importance = TRUE
     )
 
-    print(dX);
-    print("do cross validation...");
+    message("do cross validation...");
 
     # 交叉验证评估
     cv_results <- cv.glmnet(as.matrix(dX[,selected_features]), as.numeric( y) -1, family = "binomial", alpha = 0)
@@ -143,7 +142,7 @@ ensemble_model <- function(X, y, selected_features) {
         bootstraps = 50
     )
 
-    pdf("./decision_curve.pdf", width = 12, height = 9)  # 单位：英寸
+    pdf(file.path(save_dir, "decision_curve.pdf"), width = 12, height = 9)  # 单位：英寸
     # 绘制决策曲线
     plot_decision_curve(
         list(dca_glm, dca_xgb, dca_rf),
@@ -189,7 +188,7 @@ ensemble_model <- function(X, y, selected_features) {
     # 在ensemble_model函数中添加以下代码（在保存模型之后，返回结果之前）
 
     # 绘制校准曲线
-    pdf("./calibration_curves.pdf", width = 10, height = 6)
+    pdf(file.path(save_dir, "calibration_curves.pdf"), width = 10, height = 6)
     par(mfrow = c(1, 3))  # 一行三列的布局
 
     # 1. 逻辑回归校准曲线
@@ -283,12 +282,11 @@ ensemble_model <- function(X, y, selected_features) {
         theme_minimal() +
         theme(legend.position = "bottom")
 
-    ggsave("./combined_calibration_curve.pdf", plot = p, width = 10, height = 8)
+    ggsave(file.path(save_dir, "combined_calibration_curve.pdf"), plot = p, width = 10, height = 8)
 
     # 将校准数据保存到Excel
     calibration_data_all$bin <- as.character(calibration_data_all$bin)
-    write.xlsx(calibration_data_all, file = "./calibration_data.xlsx")
-
+    write.xlsx(calibration_data_all, file = file.path(save_dir, "calibration_data.xlsx"))
 
     return(list(
         nomogram = nomogram_model,

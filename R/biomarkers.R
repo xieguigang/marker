@@ -99,6 +99,15 @@ marker = function(file_path, class, sel_features = NULL, training_size = 0.7, to
         rf_result <- run_random_forest(X, y)
         svm_result <- run_svm_rfe(X, y)
 
+        writeLines(
+            jsonlite::toJSON(list(
+                lasso = lasso_result,
+                random_forest = rf_result,
+                svm = svm_result
+            )),
+            file.path(save_dir, "feature_selection.json")
+        )
+
         combined <- c(as.character(lasso_result$features),
                       as.character(rf_result$features),
                       as.character(svm_result$features));
@@ -128,11 +137,16 @@ marker = function(file_path, class, sel_features = NULL, training_size = 0.7, to
     test = X[-split_idx,];
     test_y = y[-split_idx];
 
+    write.csv(train, file = file.path(save_dir,"data","training.csv"));
+    writeLines(as.character(train_y), con = file.path(save_dir,"data","training_labels.csv"));
+    write.csv(test, file = file.path(save_dir,"data","test.csv"));
+    writeLines(as.character(test_y), con = file.path(save_dir,"data","test_labels.csv"));
+
     # 4. 模型集成
-    ensemble_result <- ensemble_model(train, train_y, top_features)
+    ensemble_result <- ensemble_model(train, train_y, top_features, save_dir)
 
     # 5. 可视化
-    visualize_results(ensemble_result, test, test_y,top_features)
+    visualize_results(ensemble_result, test, test_y,top_features, save_dir);
 
     invisible(NULL);
 }

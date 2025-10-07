@@ -93,7 +93,7 @@
 #' @author Your Name <your.email@example.com>
 #'
 #' @export
-visualize_results <- function(results, X, y,top_features) {
+visualize_results <- function(results, X, y,top_features, save_dir) {
     nomogram_model <- results$nomogram;
     xgb_model =results$xgb;
     rf_model = results$rf_model;
@@ -107,7 +107,7 @@ visualize_results <- function(results, X, y,top_features) {
     model_test = data.frame(y_class = y, y_label = dX$class,
                             row.names = rownames(X));
 
-    pdf(file = "./roc_nomogram_model.pdf");
+    pdf(file = file.path(save_dir, "roc_nomogram_model.pdf"));
 
     # 获取预测概率
     # pred_prob <- predict(nomogram_model, type = "response")
@@ -131,7 +131,7 @@ visualize_results <- function(results, X, y,top_features) {
          lwd = 2)  # 曲线粗细（可选）
     dev.off();
 
-    pdf(file = "./nomogram_model_train_test.pdf");
+    pdf(file = file.path(save_dir, "nomogram_model_train_test.pdf"));
 
     plot(roc_nomogram, col = "blue", lwd = 2, main = "Train & Test ROC Curves",
          xlab = "False Positive Rate", ylab = "True Positive Rate")
@@ -147,7 +147,7 @@ visualize_results <- function(results, X, y,top_features) {
 
 
 
-    pdf(file = "./roc_xgb_model.pdf");
+    pdf(file = file.path( save_dir, "roc_xgb_model.pdf"));
 
     # 获取预测概率
     # pred_prob <- predict(nomogram_model, type = "response")
@@ -174,7 +174,7 @@ visualize_results <- function(results, X, y,top_features) {
     # text(0.5, 0.3, paste("CV AUC:", round(auc, 2)), col = "red");
     dev.off();
 
-    pdf(file = "./xgb_model_train_test.pdf");
+    pdf(file = file.path(save_dir, "xgb_model_train_test.pdf"));
 
     plot(roc_xgb, col = "blue", lwd = 2, main = "Train & Test ROC Curves",
          xlab = "False Positive Rate", ylab = "True Positive Rate")
@@ -190,7 +190,7 @@ visualize_results <- function(results, X, y,top_features) {
 
 
 
-    pdf(file = "./roc_rf_model.pdf");
+    pdf(file = file.path(save_dir, "roc_rf_model.pdf"));
 
     # 获取预测概率
     # pred_prob <- predict(nomogram_model, type = "response")
@@ -216,7 +216,7 @@ visualize_results <- function(results, X, y,top_features) {
     # text(0.5, 0.3, paste("CV AUC:", round(auc, 2)), col = "red");
     dev.off();
 
-    pdf(file = "./rf_model_train_test.pdf");
+    pdf(file = file.path(save_dir, "rf_model_train_test.pdf"));
 
     plot(roc_xgb, col = "blue", lwd = 2, main = "Train & Test ROC Curves",
          xlab = "False Positive Rate", ylab = "True Positive Rate")
@@ -326,11 +326,11 @@ visualize_results <- function(results, X, y,top_features) {
     )
 
     # 保存到Excel
-    write.xlsx(results_df, file = "./model_compares.xlsx")
+    write.xlsx(results_df, file = file.path(save_dir, "model_compares.xlsx"))
     # 模型在测试集上的预测测试效果
-    write.xlsx(model_test, file = "./model_test.xlsx");
+    write.xlsx(model_test, file = file.path(save_dir, "model_test.xlsx"));
 
-    pdf(file = "./ROC.pdf");
+    pdf(file = file.path( save_dir, "ROC.pdf"));
 
     plot(roc_nomogram, col = "blue", lwd = 2, main = "ROC Curves Comparison",
          xlab = "False Positive Rate", ylab = "True Positive Rate")
@@ -346,7 +346,7 @@ visualize_results <- function(results, X, y,top_features) {
 
     dev.off();
 
-    pdf(file = "./feature_importance.pdf");
+    pdf(file = file.path( save_dir, "feature_importance.pdf"));
 
     coef_df <- data.frame(
         Feature = names(coefficients(nomogram_model))[-1],
@@ -359,7 +359,7 @@ visualize_results <- function(results, X, y,top_features) {
     print(p);
     dev.off();
 
-    write.xlsx(coef_df, file = "./model_features.xlsx");
+    write.xlsx(coef_df, file = file.path( save_dir, "model_features.xlsx"));
 
     library(fastshap)
     library(shapviz)
@@ -380,7 +380,7 @@ visualize_results <- function(results, X, y,top_features) {
     baseline <- shap_values$baseline
 
     # 导出CSV
-    write.csv(shap_matrix, "SHAP_Values.csv", row.names = TRUE, quote = FALSE)
+    write.csv(shap_matrix, file.path( save_dir, "SHAP_Values.csv"), row.names = TRUE, quote = FALSE)
 
     # 导出Excel
     wb <- createWorkbook()
@@ -388,18 +388,18 @@ visualize_results <- function(results, X, y,top_features) {
     writeData(wb, 1, shap_matrix, rowNames = TRUE)
     addWorksheet(wb, "Baseline")
     writeData(wb, 2, data.frame(Baseline = baseline))
-    saveWorkbook(wb, "shap_results.xlsx", overwrite = TRUE)
+    saveWorkbook(wb, file.path( save_dir, "shap_results.xlsx"), overwrite = TRUE)
 
 
     # 3. 可视化
-    pdf(file = "./shap.pdf");
+    pdf(file = file.path(save_dir, "./shap.pdf"));
     print(sv_importance(shap_viz))  # 全局特征重要性
     # 蜂群图（Beeswarm plot）
     print(sv_waterfall(shap_viz, row_id = 1))  # 单个样本解释
     dev.off();
 
 
-    pdf(file = "./nomogram.pdf", width = 24,height = 8, family = "GB1");
+    pdf(file = file.path(save_dir, "nomogram.pdf"), width = 24,height = 8, family = "GB1");
     library(rms)
 
     ddist <<- datadist(dX);
