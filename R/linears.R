@@ -66,10 +66,18 @@
 #' }
 #'
 #' @export
-single_linear = function(data, NC, Treatment, save_dir = "./") {
-    print("use dir path for export result files of the single linears:");
-    print(save_dir);
+single_linear = function(data, args) {
+    NC = args$CON;
+    Treatment = args$Treatment;
+    save_dir = args$save_dir;
 
+    message("use dir path for export result files of the single linears:");
+    message(save_dir);
+    message("class label for NC type is:");
+    message(NC);
+    message("class label for treatment type is:");
+    message(Treatment);
+    
     # 初始化结果存储
     results_df <- data.frame(
         Metabolite = character(0),

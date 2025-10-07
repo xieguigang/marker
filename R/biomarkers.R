@@ -66,7 +66,7 @@
 marker = function(file_path, class, sel_features = NULL, training_size = 0.7, top_features = 6, save_dir= "./") {
     # 1. 加载数据
     data <- dataframe(data = file_path);
-    preprocessed <- preprocess_data(data[data$class %in% class,]);
+    preprocessed <- preprocess_data(data[data$class %in% class,], labels = class);
     X <- preprocessed$X
     y <- preprocessed$y
 
@@ -75,11 +75,17 @@ marker = function(file_path, class, sel_features = NULL, training_size = 0.7, to
 
     dir.create(file.path(save_dir,"linears"));
 
+    message("inspect of the processed input data:");
     str(X);
+    message("the data labels for each sample:");
     print(y);
 
     plot_pca(df = data, dirsave = save_dir);
-    single_linear(data, NC = class[1], Treatment = class[2], save_dir = file.path(save_dir,"linears"));
+    single_linear(data, list(
+        CON = class[1], 
+        Treatment = class[2], 
+        save_dir = file.path(save_dir,"linears"))
+    );
     stats_data(data, CON = class[1], treatment = class[2], save_dir = save_dir);
 
     message("do we havee the selected features for run analysis?");

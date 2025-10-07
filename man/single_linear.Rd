@@ -4,7 +4,7 @@
 \alias{single_linear}
 \title{Perform single metabolite linear regression analysis with comprehensive evaluation}
 \usage{
-single_linear(data, NC, Treatment, save_dir = "./")
+single_linear(data, args)
 }
 \arguments{
 \item{data}{A data frame containing the metabolomics data. The first column should be 
