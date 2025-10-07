@@ -27,25 +27,29 @@ samples and columns represent features.}
 
 \item{top_features}{A character vector or numeric index specifying the top features
 to be used for model prediction and visualization.}
+
+\item{save_dir}{A character string specifying the directory path where all output
+files will be saved. The directory will be created if it doesn't exist.}
 }
 \value{
-Invisible NULL. The function primarily generates output files in the current
-  working directory:
+Invisible list containing SHAP analysis results. The function primarily 
+  generates output files in the specified directory:
   \itemize{
     \item \strong{PDF files:} Multiple visualization plots including ROC curves,
           feature importance, SHAP plots, and nomograms
     \item \strong{Excel files:} Model performance metrics comparison and test
           predictions
+    \item \strong{CSV files:} SHAP values and statistical summaries
   }
-  Specifically generates the following files:
+  Specifically generates the following files organized by subdirectories:
   \itemize{
-    \item ROC curve PDFs: "roc_nomogram_model.pdf", "roc_xgb_model.pdf", "roc_rf_model.pdf"
-    \item Train-test comparison PDFs: "nomogram_model_train_test.pdf", "xgb_model_train_test.pdf",
+    \item ROC curves: "roc_nomogram_model.pdf", "roc_xgb_model.pdf", "roc_rf_model.pdf"
+    \item Train-test comparisons: "nomogram_model_train_test.pdf", "xgb_model_train_test.pdf",
           "rf_model_train_test.pdf"
-    \item Combined ROC curve: "ROC.pdf"
-    \item Feature importance: "feature_importance.pdf", "shap.pdf", "nomogram.pdf"
-    \item Performance metrics: "model_compares.xlsx", "model_test.xlsx", "model_features.xlsx"
-    \item SHAP results: "SHAP_Values.csv", "shap_results.xlsx"
+    \item Combined visualizations: "ROC.pdf", "combined_feature_importance.pdf"
+    \item Feature importance: "feature_importance/" subdirectory with model-specific plots
+    \item SHAP analysis: "shap_analysis/" subdirectory with detailed SHAP results
+    \item Performance metrics: Excel files with model comparisons and test results
   }
 }
 \description{
@@ -53,12 +57,50 @@ This function generates a comprehensive set of visualizations and evaluations
 for multiple machine learning models, including ROC curves, feature importance
 plots, SHAP analysis, nomograms, and performance metrics comparison.
 }
+\section{Model Evaluation Methods}{
+
+This function implements comprehensive model evaluation using:
+\itemize{
+  \item \strong{ROC curve analysis:} Visualizes model performance across different 
+        classification thresholds using the pROC package 
+  \item \strong{Cross-validation:} Assesses model generalizability through resampling 
+        techniques to prevent overfitting 
+  \item \strong{Performance metrics:} Calculates AUC, accuracy, sensitivity, 
+        specificity, F1 score, and other classification metrics 
+}
+}
+
+\section{Visualization Features}{
+
+The function generates multiple visualization types supported by R's graphics
+capabilities :
+\itemize{
+  \item \strong{ROC curves:} Individual and combined ROC plots for model comparison
+  \item \strong{Feature importance:} Bar plots showing variable significance across models
+  \item \strong{SHAP analysis:} Model interpretation plots including beeswarm, waterfall,
+        and importance plots
+  \item \strong{Nomograms:} Clinical prediction tools for logistic regression models
+  \item \strong{Train-test comparisons:} Visualization of model performance on both
+        training and test datasets
+}
+}
+
+\section{File Organization}{
+
+The function creates a structured output directory with the following organization:
+\itemize{
+  \item Main directory: Contains combined visualizations and summary files
+  \item \code{feature_importance/}: Model-specific feature importance plots and data
+  \item \code{shap_analysis/}: Detailed SHAP results for each model with subdirectories
+}
+}
+
 \section{Warning}{
 
-This function will generate multiple files in the current working directory.
+This function will generate multiple files in the specified directory.
 Ensure you have write permissions and adequate disk space. The function requires
 several packages to be installed and loaded: \code{pROC}, \code{ggplot2},
-\code{rms}, \code{openxlsx}, \code{fastshap}, \code{shapviz}.
+\code{rms}, \code{openxlsx}, \code{fastshap}, \code{shapviz}, \code{DALEX}.
 }
 
 \examples{
@@ -93,16 +135,18 @@ results <- list(
 )
 
 # Run visualization
-visualize_results(results, X, y, top_features)
+visualize_results(results, X, y, top_features, save_dir = "./results")
 }
 
 }
 \seealso{
-Useful links for related packages:
+Useful links for related packages and techniques:
 \itemize{
   \item \code{\link[pROC]{roc}} for ROC curve analysis
-  \item \code{\link[ggplot2]{ggplot}} for advanced plotting
+  \item \code{\link[ggplot2]{ggplot}} for advanced plotting 
   \item \code{\link[rms]{nomogram}} for nomogram creation
+  \item \code{\link[caret]{train}} for model training and evaluation 
+  \item \code{\link[rsample]{vfold_cv}} for cross-validation implementations 
 }
 }
 \author{
