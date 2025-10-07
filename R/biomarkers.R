@@ -67,11 +67,7 @@ marker = function(data, class, sel_features = NULL, training_size = 0.7, top_fea
     print(y);
 
     plot_pca(df = data, dirsave = save_dir);
-    single_linear(data, list(
-        CON = class[1], 
-        Treatment = class[2], 
-        save_dir = file.path(save_dir,"linears"))
-    );
+    single_linear(data, CON = class[1], Treatment = class[2], save_dir = file.path(save_dir,"linears"));
     stats_data(data, CON = class[1], treatment = class[2], save_dir = save_dir);
 
     message("do we havee the selected features for run analysis?");

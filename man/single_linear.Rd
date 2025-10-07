@@ -4,13 +4,13 @@
 \alias{single_linear}
 \title{Perform single metabolite linear regression analysis with comprehensive evaluation}
 \usage{
-single_linear(data, args)
+single_linear(data, CON, Treatment, save_dir, top_plots = 50)
 }
 \arguments{
 \item{data}{A data frame containing the metabolomics data. The first column should be 
 the class labels (as factor), and subsequent columns represent metabolite concentrations.}
 
-\item{NC}{Character string specifying the name of the negative control/normal group 
+\item{CON}{Character string specifying the name of the negative control/normal group 
 in the class column (e.g., "Control" or "Normal").}
 
 \item{Treatment}{Character string specifying the name of the treatment group 
@@ -62,7 +62,7 @@ data <- read.csv("metabolite_data.csv")
 data$class <- as.factor(data$class)
 
 # Run analysis comparing "Control" vs "Treatment" groups
-results <- single_linear(data, NC = "Control", Treatment = "Treatment")
+results <- single_linear(data, CON = "Control", Treatment = "Treatment")
 
 # View top 10 metabolites by AUC
 head(results, 10)
