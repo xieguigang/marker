@@ -69,14 +69,15 @@ marker = function(file_path, class, sel_features = NULL, training_size = 0.7, to
     preprocessed <- preprocess_data(data[data$class %in% class,]);
     X <- preprocessed$X
     y <- preprocessed$y
-    name = save_dir;
 
     plot_pca(df = data, dirsave = save_dir);
-    single_linear(data, NC = class[1], Treatment = class[2]);
+    single_linear(data, NC = class[1], Treatment = class[2], save_dir = save_dir);
     stats_data(data, CON = class[1], treatment = class[2], save_dir = save_dir);
 
-    print(name);
-    print(sel_features);
+    message("result data files will be save at location:");
+    message(save_dir);
+    message("do we havee the selected features for run analysis?");
+    message(sel_features);
 
     if (length(sel_features) == 0) {
         # 3. 特征选择

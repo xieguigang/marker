@@ -66,7 +66,7 @@
 #' }
 #'
 #' @export
-single_linear = function(data, NC, Treatment) {
+single_linear = function(data, NC, Treatment, save_dir = "./") {
     # 初始化结果存储
     results_df <- data.frame(
         Metabolite = character(0),
@@ -84,8 +84,8 @@ single_linear = function(data, NC, Treatment) {
     )
 
     # 创建目录保存各种图表
-    dir.create("Individual_ROCs", showWarnings = FALSE)
-    dir.create("Barplots", showWarnings = FALSE)  # 新增条形图目录
+    dir.create(file.path(save_dir, "Individual_ROCs"), showWarnings = FALSE)
+    dir.create(file.path(save_dir, "Barplots"), showWarnings = FALSE)  # 新增条形图目录
 
     roc_plots <- list()
 
@@ -172,7 +172,7 @@ single_linear = function(data, NC, Treatment) {
             theme(legend.position = "none")
 
         # 保存条形图
-        ggsave(paste0("Barplots/", metab_name, "_barplot.pdf"), p_bar, width = 6, height = 5)
+        ggsave(file.path(save_dir, paste0("Barplots/", metab_name, "_barplot.pdf")), p_bar, width = 6, height = 5)
         # === 结束新增部分 ===
 
         # 存储结果
@@ -198,7 +198,7 @@ single_linear = function(data, NC, Treatment) {
                  x = "False Positive Rate", y = "True Positive Rate") +
             theme_minimal()
 
-        ggsave(paste0("Individual_ROCs/", metab_name, "_ROC.pdf"), p, width = 6, height = 4)
+        ggsave(file.path(save_dir, paste0("Individual_ROCs/", metab_name, "_ROC.pdf")), p, width = 6, height = 4)
 
         # 存储前10名候选
         if (length(roc_plots) < 10) {
@@ -228,13 +228,13 @@ single_linear = function(data, NC, Treatment) {
             theme_minimal() +
             scale_color_discrete(labels = paste0(names(top_rocs), " (AUC=",
                                                  round(sapply(top_rocs, auc), 3), ")"))
-        ggsave("Top10_ROCs_Combined.pdf", width = 8, height = 6)
+        ggsave( file.path( save_dir, "Top10_ROCs_Combined.pdf"), width = 8, height = 6)
     }
 
     # 输出前10名代谢物
-    cat("Top 10 Metabolites by AUC:\n")
+    cat("Top 10 Metabolites by AUC:\n");
     print(head(results_df, 10));
 
     # 导出结果到Excel
-    write.xlsx(results_df, "Metabolite_Regression_Results.xlsx");
+    write.xlsx(results_df, file.path( save_dir, "Metabolite_Regression_Results.xlsx"));
 }

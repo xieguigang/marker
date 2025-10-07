@@ -65,5 +65,8 @@ plot_pca = function(df, dirsave) {
         geom_vline(xintercept = 0, linetype = "dashed", color = "grey50")
 
     # 6. 保存结果（可选）
-    ggsave(file.path(dirsave, "PCA_plot.png"), width = 8, height = 6, dpi = 300)
+    ggsave(file.path(dirsave, "PCA_plot.png"), width = 8, height = 6, dpi = 300);
+
+    writeLines(variance, con = file.path(dirsave,"PCA_importance.txt"));
+    write.csv(pc_scores, con = file.path(dirsave,"PCA_scores.csv"));
 }
