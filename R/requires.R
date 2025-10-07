@@ -52,6 +52,8 @@
 #'
 #' @export
 .requires = function() {
+    message("load all required packages...");
+
     library(ggplot2)
     library(glmnet)
     library(randomForest)
