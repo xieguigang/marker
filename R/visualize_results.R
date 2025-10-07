@@ -414,6 +414,9 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
     library(iBreakDown)
     library(openxlsx)
 
+    shap_dir = file.path(save_dir,"shap_analysis");
+    dir.create(shap_dir, showWarnings = FALSE, recursive = TRUE);
+
     # ==================== SHAP分析部分 ====================
     
     # 1. 为XGBoost模型添加SHAP分析
@@ -430,10 +433,10 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
             
             # 导出SHAP值表格
             shap_values_df <- as.data.frame(xgb_shap$S)
-            write.xlsx(shap_values_df, file = file.path(save_dir, "xgb_shap_values.xlsx"))
+            write.xlsx(shap_values_df, file = file.path(shap_dir, "xgb_shap_values.xlsx"))
             
             # 绘制SHAP可视化图
-            pdf(file = file.path(save_dir, "xgb_shap_plots.pdf"))
+            pdf(file = file.path(shap_dir, "xgb_shap_plots.pdf"))
             print(sv_importance(xgb_shap, kind = "both"))  # 重要性图
             print(sv_importance(xgb_shap, kind = "beeswarm"))  # 蜂群图
             print(sv_dependence(xgb_shap, v = top_features[1]))  # 依赖图
@@ -479,7 +482,7 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
             
             # 导出SHAP值表格
             shap_df <- as.data.frame(shap_values)
-            write.xlsx(shap_df, file = file.path(save_dir, "rf_shap_values.xlsx"))
+            write.xlsx(shap_df, file = file.path(shap_dir, "rf_shap_values.xlsx"))
             
             # 创建shapviz对象进行可视化[1](@ref)
             sv_data <- as.matrix(X[1:n_samples, top_features])
@@ -494,7 +497,7 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
             class(rf_shap) <- "shapviz"
             
             # 绘制SHAP图
-            pdf(file = file.path(save_dir, "rf_shap_plots.pdf"))
+            pdf(file = file.path(shap_dir, "rf_shap_plots.pdf"))
             if (n_samples > 1) {
                 # 重要性图
                 sv_importance(rf_shap, kind = "beeswarm")
@@ -533,13 +536,13 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
             
             # 导出SHAP值表格
             shap_df <- as.data.frame(nomogram_shap)
-            write.xlsx(shap_df, file = file.path(save_dir, "nomogram_shap_values.xlsx"))
+            write.xlsx(shap_df, file = file.path(shap_dir, "nomogram_shap_values.xlsx"))
             
             # 创建shapviz对象进行可视化
             nomogram_shap_viz <- shapviz(nomogram_shap, X = X[sample_indices, top_features])
             
             # 绘制SHAP图
-            pdf(file = file.path(save_dir, "nomogram_shap_plots.pdf"))
+            pdf(file = file.path(shap_dir, "nomogram_shap_plots.pdf"))
             sv_importance(nomogram_shap_viz, kind = "bar")  # 条形图
             if (n_samples > 10) {
                 sv_importance(nomogram_shap_viz, kind = "beeswarm")  # 蜂群图
@@ -557,7 +560,7 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
     cat("生成综合SHAP报告...\n")
     
     # 创建综合报告PDF
-    pdf(file = file.path(save_dir, "comprehensive_shap_report.pdf"), width = 12, height = 8)
+    pdf(file = file.path(shap_dir, "comprehensive_shap_report.pdf"), width = 12, height = 8)
     
     # 为每个模型添加SHAP重要性比较
     if (exists("xgb_shap") && exists("rf_shap")) {
