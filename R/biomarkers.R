@@ -104,8 +104,16 @@ marker = function(file_path, class, sel_features = NULL, training_size = 0.7, to
                       as.character(svm_result$features));
         # 统计次数并降序排序
         counts <- sort(table(combined), decreasing = TRUE)
+
+        message("get sorted features:");
+        print(counts);
+
         # 提取前三个字符串名称
         top_features <- names(head(counts, top_features));
+
+        if (length(top_features) == 0) {
+            stop("all feature selection method failured! no features couldd be used for modelling!");
+        }
     } else {
         top_features <- sel_features;
     }

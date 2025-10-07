@@ -44,19 +44,29 @@
 #' * The `glmnet` package documentation: \url{https://glmnet.stanford.edu/}
 #' * Useful resources on LASSO regression: \url{https://web.stanford.edu/~hastie/Papers/glmnet.pdf}
 run_lasso <- function(X, y, lambda = 0.01) {
-    # 交叉验证确定最优lambda
-    cv_fit <- cv.glmnet(X, y, family = "binomial", alpha = 1)
+    result <- tryCatch(
+        expr = {
+            # 交叉验证确定最优lambda
+            cv_fit <- cv.glmnet(X, y, family = "binomial", alpha = 1)
 
-    # 提取最优模型
-    best_model <- glmnet(X, y, family = "binomial", alpha = 1, lambda = lambda)
+            # 提取最优模型
+            best_model <- glmnet(X, y, family = "binomial", alpha = 1, lambda = lambda)
 
-    # 提取非零系数特征
-    coefs <- coef(best_model, s = lambda)
-    selected_features <- rownames(coefs)[which(coefs != 0)][-1]  # 排除截距项
+            # 提取非零系数特征
+            coefs <- coef(best_model, s = lambda)
+            selected_features <- rownames(coefs)[which(coefs != 0)][-1]  # 排除截距项
 
-    return(list(
-        features = selected_features,
-        model = best_model,
-        cv_error = min(cv_fit$cvm)
-    ))
+            list(
+                features = selected_features,
+                model = best_model,
+                cv_error = min(cv_fit$cvm)
+            );
+        },
+        error = function(e) {
+            message("lasso feature selection error: ", conditionMessage(e));
+            return(NULL) # 出错时返回NULL
+        }
+    )
+
+    return(result);
 }
