@@ -6,7 +6,7 @@
 #'
 #' @param data A data frame containing the metabolomics data. The first column should be 
 #'   the class labels (as factor), and subsequent columns represent metabolite concentrations.
-#' @param NC Character string specifying the name of the negative control/normal group 
+#' @param CON Character string specifying the name of the negative control/normal group 
 #'   in the class column (e.g., "Control" or "Normal").
 #' @param Treatment Character string specifying the name of the treatment group 
 #'   in the class column (e.g., "Case" or "Disease").
@@ -51,7 +51,7 @@
 #' data$class <- as.factor(data$class)
 #' 
 #' # Run analysis comparing "Control" vs "Treatment" groups
-#' results <- single_linear(data, NC = "Control", Treatment = "Treatment")
+#' results <- single_linear(data, CON = "Control", Treatment = "Treatment")
 #' 
 #' # View top 10 metabolites by AUC
 #' head(results, 10)
@@ -66,15 +66,11 @@
 #' }
 #'
 #' @export
-single_linear = function(data, args) {
-    NC = args$CON;
-    Treatment = args$Treatment;
-    save_dir = args$save_dir;
-
+single_linear = function(data, CON, Treatment, save_dir, top_plots = 50) {
     message("use dir path for export result files of the single linears:");
     message(save_dir);
-    message("class label for NC type is:");
-    message(NC);
+    message("class label for CON type is:");
+    message(CON);
     message("class label for treatment type is:");
     message(Treatment);
     
@@ -89,18 +85,19 @@ single_linear = function(data, args) {
         Sensitivity = numeric(0),
         Specificity = numeric(0),
         F1score = numeric(0),
-        log2FC = numeric(0),      # 新增log2FC列
-        pvalue = numeric(0),      # 新增p值列
+        log2FC = numeric(0),
+        pvalue = numeric(0),
         stringsAsFactors = FALSE
     )
 
     # 创建目录保存各种图表
     dir.create(file.path(save_dir, "Individual_ROCs"), showWarnings = FALSE)
-    dir.create(file.path(save_dir, "Barplots"), showWarnings = FALSE)  # 新增条形图目录
+    dir.create(file.path(save_dir, "Barplots"), showWarnings = FALSE)
+    
+    # 初始化存储所有ROC对象的列表
+    all_rocs <- list()
 
-    roc_plots <- list()
-
-    # 遍历每个代谢物
+    # 遍历每个代谢物进行计算（不立即绘图）
     for (i in 2:ncol(data)) {
         metab_name <- colnames(data)[i]
 
@@ -113,24 +110,24 @@ single_linear = function(data, args) {
         predictions <- predict(model)
 
         # 计算ROC和AUC
-        roc_obj <- roc(data$class, predictions, levels = c(NC, Treatment), direction = "<")
+        roc_obj <- roc(data$class, predictions, levels = c(CON, Treatment), direction = "<")
         auc_value <- auc(roc_obj)
 
         # 计算最佳阈值和混淆矩阵
         best_threshold <- coords(roc_obj, "best", ret = "threshold")$threshold
-        predicted_class <- ifelse(predictions > best_threshold, Treatment, NC)
+        predicted_class <- ifelse(predictions > best_threshold, Treatment, CON)
 
         # 确保因子水平一致
-        actual_class <- factor(data$class, levels = c(NC, Treatment))
-        predicted_class <- factor(predicted_class, levels = c(NC, Treatment))
+        actual_class <- factor(data$class, levels = c(CON, Treatment))
+        predicted_class <- factor(predicted_class, levels = c(CON, Treatment))
 
         conf_matrix <- table(Predicted = predicted_class, Actual = actual_class)
 
         # 提取混淆矩阵值
         TP <- conf_matrix[Treatment, Treatment]
-        TN <- conf_matrix[NC, NC]
-        FP <- conf_matrix[Treatment, NC]
-        FN <- conf_matrix[NC, Treatment]
+        TN <- conf_matrix[CON, CON]
+        FP <- conf_matrix[Treatment, CON]
+        FN <- conf_matrix[CON, Treatment]
 
         # 计算性能指标
         accuracy <- (TP + TN) / sum(conf_matrix)
@@ -142,9 +139,8 @@ single_linear = function(data, args) {
                            2 * (precision * sensitivity) / (precision + sensitivity),
                            0)
 
-        # === 新增部分：统计检验和log2FC计算 ===
-        # 提取两组数据
-        group1 <- data[data$class == NC, metab_name]
+        # 统计检验和log2FC计算
+        group1 <- data[data$class == CON, metab_name]
         group2 <- data[data$class == Treatment, metab_name]
 
         # 计算log2FC
@@ -154,40 +150,10 @@ single_linear = function(data, args) {
         t_test <- t.test(group2, group1, var.equal = FALSE)
         p_val <- t_test$p.value
 
-        # 创建绘图数据
-        plot_data <- data.frame(
-            group = factor(c(rep(NC, length(group1)), rep(Treatment, length(group2)))),
-            value = c(group1, group2)
-        )
-
         model_eq <- sprintf("%s_Prob = %.4f + %.4f * %s",
                             Treatment, coef(model)[1], coef(model)[2], metab_name)
 
-        # 创建条形图（带误差线和jitter点）
-        y_max <- max(plot_data$value) * 1.2
-        p_bar <- ggplot(plot_data, aes(x = group, y = value, fill = group)) +
-            stat_summary(fun = mean, geom = "bar", width = 0.6) +
-            stat_summary(fun.data = mean_se, geom = "errorbar", width = 0.2) +
-            geom_jitter(width = 0.1, size = 2, alpha = 0.5) +
-            geom_signif(
-                comparisons = list(c(NC, Treatment)),
-                map_signif_level = function(p) sprintf("p = %.2g", p),
-                y_position = y_max,
-                textsize = 3
-            ) +
-            labs(title = metab_name,
-                 x = "Group",
-                 y = "Concentration",
-                 subtitle = sprintf("log2FC = %.2f\nAUC     = %s\n%s", log2fc,round(auc_value, 3), model_eq)) +
-            theme_minimal() +
-            theme(legend.position = "none")
-
-        # 保存条形图
-        ggsave(file.path(save_dir, paste0("Barplots/", metab_name, "_barplot.pdf")), p_bar, width = 6, height = 5)
-        # === 结束新增部分 ===
-
         # 存储结果
-
         results_df <- rbind(results_df, data.frame(
             Metabolite = metab_name,
             Model_Equation = model_eq,
@@ -198,54 +164,103 @@ single_linear = function(data, args) {
             Sensitivity = sensitivity,
             Specificity = specificity,
             F1score = f1_score,
-            log2FC = log2fc,    # 新增值
-            pvalue = p_val      # 新增值
+            log2FC = log2fc,
+            pvalue = p_val
         ))
-
-        # 生成单个ROC图
-        p <- ggroc(roc_obj, legacy.axes = TRUE) +
-            geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray") +
-            labs(title = paste0(metab_name, " (AUC = ", round(auc_value, 3), ")"),
-                 x = "False Positive Rate", y = "True Positive Rate") +
-            theme_minimal()
-
-        ggsave(file.path(save_dir, paste0("Individual_ROCs/", metab_name, "_ROC.pdf")), p, width = 6, height = 4)
-
-        # 存储前10名候选
-        if (length(roc_plots) < 10) {
-            roc_plots[[metab_name]] <- list(roc = roc_obj, plot = p)
-        } else {
-            current_min <- min(sapply(roc_plots, function(x) auc(x$roc)))
-            if (auc_value > current_min) {
-                # 移除当前最小AUC
-                min_index <- which.min(sapply(roc_plots, function(x) auc(x$roc)))
-                roc_plots[min_index] <- NULL
-                roc_plots[[metab_name]] <- list(roc = roc_obj, plot = p)
-            }
-        }
+        
+        # 存储ROC对象供后续使用
+        all_rocs[[metab_name]] <- list(
+            roc = roc_obj,
+            auc = auc_value,
+            metab_name = metab_name,
+            group1 = group1,
+            group2 = group2,
+            log2fc = log2fc,
+            model_eq = model_eq,
+            p_val = p_val
+        )
     }
 
     # 按AUC降序排序
     results_df <- results_df[order(results_df$AUC, decreasing = TRUE), ]
-
-    # 绘制前10名ROC叠加图
-    if (length(roc_plots) > 0) {
-        top_rocs <- lapply(roc_plots, function(x) x$roc)
-        ggroc(top_rocs, legacy.axes = TRUE) +
+    
+    # 仅对AUC排名前top_plots的feature进行绘图
+    top_metabolites <- head(results_df$Metabolite, top_plots)
+    
+    # 绘制条形图和单个ROC图（仅前top_plots个）
+    for (metab_name in top_metabolites) {
+        roc_info <- all_rocs[[metab_name]]
+        
+        # 创建条形图数据
+        plot_data <- data.frame(
+            group = factor(c(rep(CON, length(roc_info$group1)), 
+                          rep(Treatment, length(roc_info$group2)))),
+            value = c(roc_info$group1, roc_info$group2)
+        )
+        
+        # 创建条形图
+        y_max <- max(plot_data$value) * 1.2
+        p_bar <- ggplot(plot_data, aes(x = group, y = value, fill = group)) +
+            stat_summary(fun = mean, geom = "bar", width = 0.6) +
+            stat_summary(fun.data = mean_se, geom = "errorbar", width = 0.2) +
+            geom_jitter(width = 0.1, size = 2, alpha = 0.5) +
+            geom_signif(
+                comparisons = list(c(CON, Treatment)),
+                map_signif_level = function(p) sprintf("p = %.2g", p),
+                y_position = y_max,
+                textsize = 3
+            ) +
+            labs(title = metab_name,
+                 x = "Group",
+                 y = "Concentration",
+                 subtitle = sprintf("log2FC = %.2f\nAUC = %.3f\n%s", 
+                                   roc_info$log2fc, roc_info$auc, roc_info$model_eq)) +
+            theme_minimal() +
+            theme(legend.position = "none")
+        
+        # 保存条形图
+        ggsave(file.path(save_dir, "Barplots", paste0(metab_name, "_barplot.pdf")), 
+               p_bar, width = 6, height = 5)
+        
+        # 生成单个ROC图
+        p_roc <- ggroc(roc_info$roc, legacy.axes = TRUE) +
+            geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray") +
+            labs(title = paste0(metab_name, " (AUC = ", round(roc_info$auc, 3), ")"),
+                 x = "False Positive Rate", y = "True Positive Rate") +
+            theme_minimal()
+        
+        ggsave(file.path(save_dir, "Individual_ROCs", paste0(metab_name, "_ROC.pdf")), 
+               p_roc, width = 6, height = 4)
+    }
+    
+    # 绘制前10个AUC最好的feature的ROC叠加图
+    top10_metabolites <- head(results_df$Metabolite, 10)
+    top10_rocs <- lapply(top10_metabolites, function(name) all_rocs[[name]]$roc)
+    names(top10_rocs) <- top10_metabolites
+    
+    if (length(top10_rocs) > 0) {
+        p_combined <- ggroc(top10_rocs, legacy.axes = TRUE) +
             geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray") +
             labs(title = "Top 10 Metabolites by AUC",
                  x = "False Positive Rate", y = "True Positive Rate",
                  color = "Metabolite") +
             theme_minimal() +
-            scale_color_discrete(labels = paste0(names(top_rocs), " (AUC=",
-                                                 round(sapply(top_rocs, auc), 3), ")"))
-        ggsave( file.path( save_dir, "Top10_ROCs_Combined.pdf"), width = 8, height = 6)
+            scale_color_discrete(labels = paste0(names(top10_rocs), " (AUC=",
+                                                 round(sapply(top10_rocs, auc), 3), ")"))
+        ggsave(file.path(save_dir, "Top10_ROCs_Combined.pdf"), p_combined, width = 8, height = 6)
     }
 
     # 输出前10名代谢物
-    cat("Top 10 Metabolites by AUC:\n");
-    print(head(results_df, 10));
+    cat("Top 10 Metabolites by AUC:\n")
+    print(head(results_df, 10))
 
-    # 导出结果到Excel
-    write.xlsx(results_df, file.path( save_dir, "Metabolite_Regression_Results.xlsx"));
+    # 使用openxlsx包导出结果到Excel
+    write.xlsx(results_df, file.path(save_dir, "Metabolite_Regression_Results.xlsx"))
+    
+    message("分析完成！结果已保存到: ", save_dir)
+    message("总计分析了 ", nrow(results_df), " 个代谢物")
+    message("绘制了前 ", top_plots, " 个代谢物的图表")
+    message("生成了前10个AUC最佳代谢物的ROC叠加图")
+    
+    invisible(NULL);
 }

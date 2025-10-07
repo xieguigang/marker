@@ -47,7 +47,7 @@ plot_pca = function(df, dirsave) {
     # ====== 可视化 ======
     # 5. 绘制PCA得分图
     ggplot(pc_scores, aes(x = PC1, y = PC2, color = class)) +
-        geom_point(size = 4, alpha = 0.8) +  # 绘制样本点
+        geom_point(size = 3, alpha = 0.8) +  # 绘制样本点
         stat_ellipse(level = 0.95, linewidth = 1) +  # 添加95%置信椭圆
         labs(title = "PCA Score Plot",
              x = paste0("PC1 (", round(variance[1], 1), "%)"),
