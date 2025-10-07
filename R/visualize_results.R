@@ -508,60 +508,57 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
     # 创建包含所有模型特征重要性的组合图[1](@ref)
     cat("正在生成组合特征重要性图...\n")
 
-    tryCatch({
-        # 准备数据
-        all_imp_dfs <- list()
+    # 准备数据
+    all_imp_dfs <- list()
 
-        # 逻辑回归重要性
-        if (exists("coef_df")) {
-            coef_df$Model <- "Logistic Regression"
-            coef_df$Importance_Norm <- coef_df$Importance / max(coef_df$Importance)
-            all_imp_dfs$logistic <- coef_df
-        }
+    # 逻辑回归重要性
+    if (exists("coef_df")) {
+        coef_df$Model <- "Logistic Regression"
+        coef_df$Importance_Norm <- coef_df$Importance / max(coef_df$Importance)
+        all_imp_dfs$logistic <- coef_df
+    }
 
-        # 随机森林重要性
-        if (exists("rf_imp_df") && !all(is.na(rf_imp_df$Importance))) {
-            rf_imp_df$Model <- "Random Forest"
-            rf_imp_df$Importance_Norm <- rf_imp_df$Importance / max(rf_imp_df$Importance)
-            all_imp_dfs$rf <- rf_imp_df
-        }
+    # 随机森林重要性
+    if (exists("rf_imp_df") && !all(is.na(rf_imp_df$Importance))) {
+        rf_imp_df$Model <- "Random Forest"
+        rf_imp_df$Importance_Norm <- rf_imp_df$Importance / max(rf_imp_df$Importance)
+        all_imp_dfs$rf <- rf_imp_df
+    }
 
-        # XGBoost重要性
-        if (exists("xgb_imp_df") && !all(is.na(xgb_imp_df$Importance))) {
-            xgb_imp_df$Model <- "XGBoost"
-            xgb_imp_df$Importance_Norm <- xgb_imp_df$Importance / max(xgb_imp_df$Importance)
-            all_imp_dfs$xgb <- xgb_imp_df
-        }
+    # XGBoost重要性
+    if (exists("xgb_imp_df") && !all(is.na(xgb_imp_df$Importance))) {
+        xgb_imp_df$Model <- "XGBoost"
+        xgb_imp_df$Importance_Norm <- xgb_imp_df$Importance / max(xgb_imp_df$Importance)
+        all_imp_dfs$xgb <- xgb_imp_df
+    }
 
-        # 合并所有数据
-        if (length(all_imp_dfs) > 0) {
-            combined_imp <- do.call(rbind, all_imp_dfs)
+    # 合并所有数据
+    if (length(all_imp_dfs) > 0) {
+        message("inspect the raw data list of all feature importance combination result:");
+        str(all_imp_dfs);
 
-            # 绘制组合图
-            pdf(file = file.path(save_dir, "combined_feature_importance.pdf"), width = 12, height = 8)
-            p_combined <- ggplot(combined_imp, aes(x = reorder(Feature, Importance_Norm),
-                                                   y = Importance_Norm, fill = Model)) +
-                geom_bar(stat = "identity", position = "dodge") +
-                coord_flip() +
-                labs(title = "Combined Feature Importance Comparison",
-                     x = "特征", y = "标准化重要性得分",
-                     fill = "模型") +
-                theme_minimal() +
-                scale_fill_manual(values = c("#87CEEB", "#FF6B6B", "#4ECDC4")) +
-                facet_wrap(~Model, ncol = 1)
-            print(p_combined)
-            dev.off()
+        combined_imp <- do.call(rbind, all_imp_dfs)
 
-            # 保存组合数据到Excel
-            write.xlsx(combined_imp, file = file.path(save_dir, "all_model_features.xlsx"))
+        # 绘制组合图
+        pdf(file = file.path(save_dir, "combined_feature_importance.pdf"), width = 12, height = 8)
+        p_combined <- ggplot(combined_imp, aes(x = reorder(Feature, Importance_Norm),
+                                               y = Importance_Norm, fill = Model)) +
+            geom_bar(stat = "identity", position = "dodge") +
+            coord_flip() +
+            labs(title = "Combined Feature Importance Comparison",
+                 x = "特征", y = "标准化重要性得分",
+                 fill = "模型") +
+            theme_minimal() +
+            scale_fill_manual(values = c("#87CEEB", "#FF6B6B", "#4ECDC4")) +
+            facet_wrap(~Model, ncol = 1)
+        print(p_combined)
+        dev.off()
 
-            cat("组合特征重要性分析完成\n")
-        }
-    }, error = function(e) {
-        warning("组合特征重要性图生成失败: ", e$message)
-    })
+        # 保存组合数据到Excel
+        write.xlsx(combined_imp, file = file.path(save_dir, "all_model_features.xlsx"))
 
-
+        cat("组合特征重要性分析完成\n")
+    }
 
 
     pdf(file = file.path(save_dir, "nomogram.pdf"), width = 24,height = 8, family = "GB1");
