@@ -1,6 +1,7 @@
 require(marker);
 
 clusters = read.csv("clusters.csv", row.names = 1, check.names = FALSE);
+clusters = data.frame(Cluster = clusters$Cluster, row.names = rownames(clusters));
 expr = read.csv("aa55ac5e-7a48-45fd-9fb5-7e013805b247.csv", row.names = 1, check.names = FALSE);
 
 merged_data <- merge(expr, clusters, by = "row.names", all.x = TRUE, sort = FALSE)
