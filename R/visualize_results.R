@@ -358,44 +358,6 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
 
     write.xlsx(coef_df, file = file.path( save_dir, "model_features.xlsx"));
 
-    # library(fastshap)
-    # library(shapviz)
-
-    # # 若需输出类别预测（0/1）
-    # pred_wrapper_class <- function(model, newdata) {
-    #     as.numeric(predict(model, newdata = newdata, type = "response") > 0.5)
-    # }
-    # shap_values <- explain(nomogram_model, X = as.data.frame( X[, top_features]),
-    #                        pred_wrapper =pred_wrapper_class,  # 必须指定
-    #                        nsim = 100,  # 蒙特卡洛模拟次数，建议 >= 100
-    #                        shap_only = FALSE
-    # );
-    # shap_viz <- shapviz(shap_values)
-
-    # # 提取核心结果
-    # shap_matrix <- shap_values$shapley_values
-    # baseline <- shap_values$baseline
-
-    # # 导出CSV
-    # write.csv(shap_matrix, file.path( save_dir, "SHAP_Values.csv"), row.names = TRUE, quote = FALSE)
-
-    # # 导出Excel
-    # wb <- createWorkbook()
-    # addWorksheet(wb, "SHAP_Values")
-    # writeData(wb, 1, shap_matrix, rowNames = TRUE)
-    # addWorksheet(wb, "Baseline")
-    # writeData(wb, 2, data.frame(Baseline = baseline))
-    # saveWorkbook(wb, file.path( save_dir, "shap_results.xlsx"), overwrite = TRUE)
-
-
-    # # 3. 可视化
-    # pdf(file = file.path(save_dir, "shap.pdf"));
-    # print(sv_importance(shap_viz))  # 全局特征重要性
-    # # 蜂群图（Beeswarm plot）
-    # print(sv_waterfall(shap_viz, row_id = 1))  # 单个样本解释
-    # dev.off();
-
-
     pdf(file = file.path(save_dir, "nomogram.pdf"), width = 24,height = 8, family = "GB1");
     library(rms)
 
@@ -460,7 +422,7 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
             model,
             X = X_sampled,
             pred_wrapper = pred_function,
-            nsim = 50  # SHAP模拟次数
+            nsim = 100  # SHAP模拟次数
         )
 
         # 创建shapviz对象
@@ -535,6 +497,32 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
 
     # 3. Random Forest模型SHAP分析
     if (!is.null(rf_model)) {
+        cat("随机森林模型类型:", class(rf_model), "\n")
+        cat("模型结构摘要:\n")
+        print(str(rf_model, max.level = 1))
+
+        # 测试预测函数
+        test_data <- dX[1:5, top_features, drop = FALSE]
+        cat("测试预测结果:\n")
+        test_pred <- tryCatch({
+            if (inherits(rf_model, "ranger")) {
+                predict(rf_model, data = test_data)$predictions
+            } else if (inherits(rf_model, "randomForest")) {
+                if (rf_model$type == "classification") {
+                    predict(rf_model, test_data, type = "prob")[, 2]
+                } else {
+                    predict(rf_model, test_data)
+                }
+            } else {
+                predict(rf_model, test_data)
+            }
+        }, error = function(e) {
+            cat("预测测试错误:", e$message, "\n")
+            NULL
+        })
+
+        print(test_pred)
+
         generate_shap_report(rf_model, "randomforest", dX, top_features, "randomforest")
     }
 
