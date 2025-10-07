@@ -20,5 +20,7 @@
 # 3. 预测模型都显示出非常高的准确度
 
 .onLoad <- function(libname, pkgname) {
+    message("Employing multiple machine learning methods for biomarker discovery and disease prediction model construction.");
+    
     .requires();
 }
