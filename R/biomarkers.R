@@ -70,16 +70,24 @@ marker = function(file_path, class, sel_features = NULL, training_size = 0.7, to
     X <- preprocessed$X
     y <- preprocessed$y
 
-    plot_pca(df = data, dirsave = save_dir);
-    single_linear(data, NC = class[1], Treatment = class[2], save_dir = save_dir);
-    stats_data(data, CON = class[1], treatment = class[2], save_dir = save_dir);
-
     message("result data files will be save at location:");
     message(save_dir);
-    message("do we havee the selected features for run analysis?");
-    message(sel_features);
 
+    dir.create(file.path(save_dir,"linears"));
+
+    str(X);
+    print(y);
+
+    plot_pca(df = data, dirsave = save_dir);
+    single_linear(data, NC = class[1], Treatment = class[2], save_dir = file.path(save_dir,"linears"));
+    stats_data(data, CON = class[1], treatment = class[2], save_dir = save_dir);
+
+    message("do we havee the selected features for run analysis?");
+    message(length(sel_features)>0);
+    
     if (length(sel_features) == 0) {
+        message("features will be evaluated based on multiple models.");
+
         # 3. 特征选择
         lasso_result <- run_lasso(X, y)
         rf_result <- run_random_forest(X, y)

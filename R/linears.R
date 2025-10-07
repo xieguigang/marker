@@ -67,6 +67,9 @@
 #'
 #' @export
 single_linear = function(data, NC, Treatment, save_dir = "./") {
+    print("use dir path for export result files of the single linears:");
+    print(save_dir);
+
     # 初始化结果存储
     results_df <- data.frame(
         Metabolite = character(0),
