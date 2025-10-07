@@ -1,15 +1,15 @@
 #' Marker Identification for Classification Models
 #'
-#' This function performs comprehensive marker identification and validation through a multi-step process including data loading, feature selection, model ensemble, and result visualization. It integrates LASSO, Random Forest, and SVM-RFE algorithms for robust feature selection [1](@ref).
+#' This function performs comprehensive marker identification and validation through a multi-step process including data loading, feature selection, model ensemble, and result visualization. It integrates LASSO, Random Forest, and SVM-RFE algorithms for robust feature selection.
 #'
-#' @param file_path Character string specifying the path to the input data file. The file should contain both features and class labels and be readable into a data frame [1](@ref).
+#' @param file_path Character string specifying the path to the input data file. The file should contain both features and class labels and be readable into a data frame.
 #' @param class Vector specifying the class labels to be included in the analysis. Only samples with these class labels will be used.
-#' @param sel_features Optional character vector of pre-selected features. If provided (default is NULL), the function skips automated feature selection and uses these features directly [1](@ref).
+#' @param sel_features Optional character vector of pre-selected features. If provided (default is NULL), the function skips automated feature selection and uses these features directly.
 #' @param training_size Numeric value between 0 and 1 specifying the proportion of data to be used for training. Default is 0.7 (70% training, 30% testing).
 #' @param top_features Integer specifying the number of top features to select when \code{sel_features} is NULL. Default is 6.
-#' @param save_dir Character string specifying the directory path for saving results. Default is current directory ("./"). The function will create subdirectories (e.g., "linears", "machine_learning", "data") under this path if they do not exist [1](@ref).
+#' @param save_dir Character string specifying the directory path for saving results. Default is current directory ("./"). The function will create subdirectories (e.g., "linears", "machine_learning", "data") under this path if they do not exist.
 #'
-#' @return Invisibly returns \code{NULL}. The function primarily generates side effects including [1,7](@ref):
+#' @return Invisibly returns \code{NULL}. The function primarily generates side effects including:
 #' \itemize{
 #'   \item Feature selection results (when \code{sel_features} is NULL) saved as "feature_selection.json"
 #'   \item Model ensemble performance metrics and plots in the "machine_learning" subdirectory
@@ -18,7 +18,7 @@
 #' }
 #'
 #' @details
-#' The function executes the following pipeline [1](@ref):
+#' The function executes the following pipeline:
 #' \enumerate{
 #'   \item Data loading and preprocessing using \code{preprocess_data()}
 #'   \item Initial visualization and statistical analysis (PCA, linear models, descriptive statistics)
@@ -28,7 +28,7 @@
 #'   \item Result visualization and performance assessment using \code{visualize_results}
 #' }
 #'
-#' When \code{sel_features} is NULL, the feature selection process combines results from multiple algorithms and selects the most frequently identified features based on the \code{top_features} parameter [7](@ref).
+#' When \code{sel_features} is NULL, the feature selection process combines results from multiple algorithms and selects the most frequently identified features based on the \code{top_features} parameter.
 #'
 #' @examples
 #' \dontrun{
