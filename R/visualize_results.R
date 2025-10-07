@@ -407,13 +407,26 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
         } else if (model_type == "randomforest") {
             # 随机森林模型的预测函数
             pred_function <- function(object, newdata) {
-                predict(object, newdata)$predictions
+                # 检查模型类型并相应处理
+                if (inherits(object, "ranger")) {
+                    # 对于ranger包训练的模型
+                    predict(object, data = newdata)$predictions
+                } else if (inherits(object, "randomForest")) {
+                    # 对于randomForest包训练的模型
+                    if (object$type == "classification") {
+                        predict(object, newdata, type = "prob")[, 2]  # 获取第二类的概率
+                    } else {
+                        predict(object, newdata)
+                    }
+                } else {
+                    # 通用随机森林预测
+                    predict(object, newdata)$predictions
+                }
             }
         }
 
         # 计算SHAP值（使用抽样以提高计算效率）
         n_samples <- min(100, nrow(X_data))
-        set.seed(123)
         sample_indices <- sample(1:nrow(X_data), n_samples)
         X_sampled <- X_data[sample_indices, features, drop = FALSE]
 
