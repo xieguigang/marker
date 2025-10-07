@@ -188,8 +188,6 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
 
     dev.off();
 
-
-
     pdf(file = file.path(save_dir, "roc_rf_model.pdf"));
 
     # 获取预测概率
@@ -409,6 +407,173 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
     nom <- nomogram(lrm_model, fun = plogis, funlabel = "Risk Probability")
     plot(nom,xfrac = 0.1,cex.var = 1.5, cex.axis = 0.85   )
     dev.off();
+
+ library(fastshap)
+    library(shapviz)
+    library(DALEX)
+    library(iBreakDown)
+    library(openxlsx)
+
+    # ==================== SHAP分析部分 ====================
+    
+    # 1. 为XGBoost模型添加SHAP分析
+    if (!is.null(xgb_model)) {
+        cat("正在进行XGBoost模型的SHAP分析...\n")
+        
+        # 方法1: 使用shapviz包（推荐）
+        tryCatch({
+            # 准备数据
+            xgb_data <- as.matrix(X[, top_features])
+            
+            # 计算SHAP值
+            xgb_shap <- shapviz(xgb_model, X_pred = xgb_data)
+            
+            # 导出SHAP值表格
+            shap_values_df <- as.data.frame(xgb_shap$S)
+            write.xlsx(shap_values_df, file = file.path(save_dir, "xgb_shap_values.xlsx"))
+            
+            # 绘制SHAP可视化图
+            pdf(file = file.path(save_dir, "xgb_shap_plots.pdf"))
+            print(sv_importance(xgb_shap, kind = "both"))  # 重要性图
+            print(sv_importance(xgb_shap, kind = "beeswarm"))  # 蜂群图
+            print(sv_dependence(xgb_shap, v = top_features[1]))  # 依赖图
+            dev.off()
+            
+            cat("XGBoost SHAP分析完成\n")
+        }, error = function(e) {
+            cat("XGBoost SHAP分析出错:", e$message, "\n")
+        })
+    }
+    
+    # 2. 为Random Forest模型添加SHAP分析
+    if (!is.null(rf_model)) {
+        cat("正在进行Random Forest模型的SHAP分析...\n")
+        
+        tryCatch({
+            # 定义预测函数[1](@ref)
+            p_function <- function(model, data) {
+                preds <- predict(model, newdata = data)
+                if ("predicted" %in% names(preds)) {
+                    return(preds$predicted)
+                } else {
+                    return(preds)
+                }
+            }
+            
+            # 构建解释器[1](@ref)
+            rf_exp <- DALEX::explain(rf_model,
+                                   data = X[, top_features],
+                                   y = y,
+                                   predict_function = p_function,
+                                   label = "Random Forest")
+            
+            # 计算SHAP值（使用前100个样本以节省时间）
+            n_samples <- min(100, nrow(X))
+            shap_values <- matrix(nrow = n_samples, ncol = length(top_features))
+            colnames(shap_values) <- top_features
+            
+            for(i in 1:n_samples) {
+                shap_rf <- shap(rf_exp, X[i, top_features])
+                shap_values[i, ] <- shap_rf$contribution
+            }
+            
+            # 导出SHAP值表格
+            shap_df <- as.data.frame(shap_values)
+            write.xlsx(shap_df, file = file.path(save_dir, "rf_shap_values.xlsx"))
+            
+            # 创建shapviz对象进行可视化[1](@ref)
+            sv_data <- as.matrix(X[1:n_samples, top_features])
+            baseline <- mean(predict(rf_model, X[, top_features])$predicted)
+            
+            # 创建shapviz对象
+            rf_shap <- list(
+                S = shap_values,
+                X = sv_data,
+                baseline = baseline
+            )
+            class(rf_shap) <- "shapviz"
+            
+            # 绘制SHAP图
+            pdf(file = file.path(save_dir, "rf_shap_plots.pdf"))
+            if (n_samples > 1) {
+                # 重要性图
+                sv_importance(rf_shap, kind = "beeswarm")
+                # 瀑布图示例
+                sv_waterfall(rf_shap, row_id = 1)
+            }
+            dev.off()
+            
+            cat("Random Forest SHAP分析完成\n")
+        }, error = function(e) {
+            cat("Random Forest SHAP分析出错:", e$message, "\n")
+        })
+    }
+    
+    # 3. 为Nomogram模型添加SHAP分析
+    if (!is.null(nomogram_model)) {
+        cat("正在进行Nomogram模型的SHAP分析...\n")
+        
+        tryCatch({
+            # 对于逻辑回归模型，使用fastshap包
+            # 定义预测函数
+            pred_wrapper <- function(model, newdata) {
+                predict(model, newdata = newdata, type = "response")
+            }
+            
+            # 计算SHAP值（使用子集以提高计算效率）
+            n_samples <- min(50, nrow(X))
+            sample_indices <- sample(1:nrow(X), n_samples)
+            
+            nomogram_shap <- fastshap::explain(
+                nomogram_model,
+                X = X[sample_indices, top_features],
+                pred_wrapper = pred_wrapper,
+                nsim = 50  # 减少模拟次数以提高速度
+            )
+            
+            # 导出SHAP值表格
+            shap_df <- as.data.frame(nomogram_shap)
+            write.xlsx(shap_df, file = file.path(save_dir, "nomogram_shap_values.xlsx"))
+            
+            # 创建shapviz对象进行可视化
+            nomogram_shap_viz <- shapviz(nomogram_shap, X = X[sample_indices, top_features])
+            
+            # 绘制SHAP图
+            pdf(file = file.path(save_dir, "nomogram_shap_plots.pdf"))
+            sv_importance(nomogram_shap_viz, kind = "bar")  # 条形图
+            if (n_samples > 10) {
+                sv_importance(nomogram_shap_viz, kind = "beeswarm")  # 蜂群图
+            }
+            dev.off()
+            
+            cat("Nomogram SHAP分析完成\n")
+        }, error = function(e) {
+            cat("Nomogram SHAP分析出错:", e$message, "\n")
+        })
+    }
+    
+    # ==================== 生成综合SHAP报告 ====================
+    
+    cat("生成综合SHAP报告...\n")
+    
+    # 创建综合报告PDF
+    pdf(file = file.path(save_dir, "comprehensive_shap_report.pdf"), width = 12, height = 8)
+    
+    # 为每个模型添加SHAP重要性比较
+    if (exists("xgb_shap") && exists("rf_shap")) {
+        # 可以添加模型间比较代码
+        par(mfrow = c(1, 2))
+        if (exists("xgb_shap")) {
+            sv_importance(xgb_shap, kind = "bar")
+            title("XGBoost特征重要性")
+        }
+        if (exists("rf_shap")) {
+            sv_importance(rf_shap, kind = "bar")
+            title("Random Forest特征重要性")
+        }
+    }
+    
+    dev.off()
 
     invisible(NULL);
 }
