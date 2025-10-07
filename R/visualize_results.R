@@ -343,8 +343,8 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
 
     dev.off();
 
-features_dir = file.path(save_dir,"feature_importance");
-dir.create(features_dir, showWarnings=FALSE, recursive=TRUE);
+    features_dir = file.path(save_dir,"feature_importance");
+    dir.create(features_dir, showWarnings=FALSE, recursive=TRUE);
 
     pdf(file = file.path( features_dir, "nomogram_feature_importance.pdf"));
 
@@ -364,202 +364,202 @@ dir.create(features_dir, showWarnings=FALSE, recursive=TRUE);
 
 
 
-# ==================== 新增：随机森林特征重要性 ====================
-if (!is.null(rf_model)) {
-    cat("正在生成随机森林特征重要性...\n")
-    
-    # 提取随机森林特征重要性[1,7](@ref)
-    if (inherits(rf_model, "randomForest")) {
-        # 对于randomForest包创建的模型
-        rf_importance <- importance(rf_model)
-        if ("MeanDecreaseGini" %in% colnames(rf_importance)) {
-            rf_imp_df <- data.frame(
-                Feature = rownames(rf_importance),
-                Importance = rf_importance[, "MeanDecreaseGini"]
-            )
-        } else {
-            rf_imp_df <- data.frame(
-                Feature = rownames(rf_importance),
-                Importance = rf_importance[, 1]
-            )
-        }
-    } else if (inherits(rf_model, "ranger")) {
-        # 对于ranger包创建的模型[7](@ref)
-        rf_importance <- rf_model$variable.importance
-        rf_imp_df <- data.frame(
-            Feature = names(rf_importance),
-            Importance = as.numeric(rf_importance)
-        )
-    } else {
-        # 通用方法
-        tryCatch({
-            rf_importance <- importance(rf_model)
-            rf_imp_df <- data.frame(
-                Feature = rownames(rf_importance),
-                Importance = as.numeric(rf_importance[, 1])
-            )
-        }, error = function(e) {
-            # 如果上述方法失败，尝试其他方式
-            rf_imp_df <- data.frame(
-                Feature = top_features,
-                Importance = NA
-            )
-            warning("随机森林特征重要性提取失败: ", e$message)
-        })
-    }
-    
-    # 排序并清理数据
-    rf_imp_df <- rf_imp_df[order(-rf_imp_df$Importance), ]
-    rf_imp_df <- rf_imp_df[!is.na(rf_imp_df$Importance), ]
-    
-    # 绘制随机森林特征重要性图[6](@ref)
-    pdf(file = file.path(features_dir, "rf_feature_importance.pdf"))
-    p_rf <- ggplot(rf_imp_df, aes(x = reorder(Feature, Importance), y = Importance)) +
-        geom_col(fill = "#FF6B6B") +
-        coord_flip() +
-        labs(title = "Random Forest Feature Importance", 
-             subtitle = "基于平均不纯度减少(Mean Decrease Impurity)",
-             x = "特征", y = "重要性得分")
-    print(p_rf)
-    dev.off()
-    
-    # 保存随机森林特征重要性到Excel
-    write.xlsx(rf_imp_df, file = file.path(features_dir, "rf_model_features.xlsx"))
-    
-    cat("随机森林特征重要性分析完成\n")
-}
+    # ==================== 新增：随机森林特征重要性 ====================
+    if (!is.null(rf_model)) {
+        cat("正在生成随机森林特征重要性...\n")
 
-# ==================== 新增：XGBoost特征重要性 ====================
-if (!is.null(xgb_model)) {
-    cat("正在生成XGBoost特征重要性...\n")
-    
-    # 提取XGBoost特征重要性[7](@ref)
-    tryCatch({
-        if (inherits(xgb_model, "xgb.Booster")) {
-            # 使用xgboost包的功能提取重要性
-            if (requireNamespace("xgboost", quietly = TRUE)) {
-                xgb_importance <- xgboost::xgb.importance(
-                    model = xgb_model,
-                    feature_names = top_features
-                )
-                
-                xgb_imp_df <- data.frame(
-                    Feature = xgb_importance$Feature,
-                    Importance = xgb_importance$Gain,  # 使用Gain作为重要性指标
-                    Cover = xgb_importance$Cover,
-                    Frequency = xgb_importance$Frequency
+        # 提取随机森林特征重要性[1,7](@ref)
+        if (inherits(rf_model, "randomForest")) {
+            # 对于randomForest包创建的模型
+            rf_importance <- importance(rf_model)
+            if ("MeanDecreaseGini" %in% colnames(rf_importance)) {
+                rf_imp_df <- data.frame(
+                    Feature = rownames(rf_importance),
+                    Importance = rf_importance[, "MeanDecreaseGini"]
                 )
             } else {
-                stop("xgboost包未安装")
+                rf_imp_df <- data.frame(
+                    Feature = rownames(rf_importance),
+                    Importance = rf_importance[, 1]
+                )
             }
-        } else {
-            # 对于其他类型的XGBoost模型，尝试通用方法
-            xgb_imp_df <- data.frame(
-                Feature = top_features,
-                Importance = NA
+        } else if (inherits(rf_model, "ranger")) {
+            # 对于ranger包创建的模型[7](@ref)
+            rf_importance <- rf_model$variable.importance
+            rf_imp_df <- data.frame(
+                Feature = names(rf_importance),
+                Importance = as.numeric(rf_importance)
             )
-            warning("不支持的XGBoost模型类型")
+        } else {
+            # 通用方法
+            tryCatch({
+                rf_importance <- importance(rf_model)
+                rf_imp_df <- data.frame(
+                    Feature = rownames(rf_importance),
+                    Importance = as.numeric(rf_importance[, 1])
+                )
+            }, error = function(e) {
+                # 如果上述方法失败，尝试其他方式
+                rf_imp_df <- data.frame(
+                    Feature = top_features,
+                    Importance = NA
+                )
+                warning("随机森林特征重要性提取失败: ", e$message)
+            })
+        }
+
+        # 排序并清理数据
+        rf_imp_df <- rf_imp_df[order(-rf_imp_df$Importance), ]
+        rf_imp_df <- rf_imp_df[!is.na(rf_imp_df$Importance), ]
+
+        # 绘制随机森林特征重要性图[6](@ref)
+        pdf(file = file.path(features_dir, "rf_feature_importance.pdf"))
+        p_rf <- ggplot(rf_imp_df, aes(x = reorder(Feature, Importance), y = Importance)) +
+            geom_col(fill = "#FF6B6B") +
+            coord_flip() +
+            labs(title = "Random Forest Feature Importance",
+                 subtitle = "基于平均不纯度减少(Mean Decrease Impurity)",
+                 x = "特征", y = "重要性得分")
+        print(p_rf)
+        dev.off()
+
+        # 保存随机森林特征重要性到Excel
+        write.xlsx(rf_imp_df, file = file.path(features_dir, "rf_model_features.xlsx"))
+
+        cat("随机森林特征重要性分析完成\n")
+    }
+
+    # ==================== 新增：XGBoost特征重要性 ====================
+    if (!is.null(xgb_model)) {
+        cat("正在生成XGBoost特征重要性...\n")
+
+        # 提取XGBoost特征重要性[7](@ref)
+        tryCatch({
+            if (inherits(xgb_model, "xgb.Booster")) {
+                # 使用xgboost包的功能提取重要性
+                if (requireNamespace("xgboost", quietly = TRUE)) {
+                    xgb_importance <- xgboost::xgb.importance(
+                        model = xgb_model,
+                        feature_names = top_features
+                    )
+
+                    xgb_imp_df <- data.frame(
+                        Feature = xgb_importance$Feature,
+                        Importance = xgb_importance$Gain,  # 使用Gain作为重要性指标
+                        Cover = xgb_importance$Cover,
+                        Frequency = xgb_importance$Frequency
+                    )
+                } else {
+                    stop("xgboost包未安装")
+                }
+            } else {
+                # 对于其他类型的XGBoost模型，尝试通用方法
+                xgb_imp_df <- data.frame(
+                    Feature = top_features,
+                    Importance = NA
+                )
+                warning("不支持的XGBoost模型类型")
+            }
+        }, error = function(e) {
+            # 如果上述方法失败，使用简单方法
+            tryCatch({
+                # 尝试通过特征在模型中的使用频率来估计重要性
+                xgb_imp_df <- data.frame(
+                    Feature = top_features,
+                    Importance = runif(length(top_features))  # 临时替代方案
+                )
+                warning("XGBoost特征重要性提取使用替代方法: ", e$message)
+            }, error = function(e2) {
+                xgb_imp_df <- data.frame(
+                    Feature = top_features,
+                    Importance = NA
+                )
+                warning("XGBoost特征重要性提取失败: ", e2$message)
+            })
+        })
+
+        # 排序并清理数据
+        if (!all(is.na(xgb_imp_df$Importance))) {
+            xgb_imp_df <- xgb_imp_df[order(-xgb_imp_df$Importance), ]
+            xgb_imp_df <- xgb_imp_df[!is.na(xgb_imp_df$Importance), ]
+
+            # 绘制XGBoost特征重要性图
+            pdf(file = file.path(features_dir, "xgb_feature_importance.pdf"))
+            p_xgb <- ggplot(xgb_imp_df, aes(x = reorder(Feature, Importance), y = Importance)) +
+                geom_col(fill = "#4ECDC4") +
+                coord_flip() +
+                labs(title = "XGBoost Feature Importance",
+                     subtitle = "基于特征增益(Feature Gain)",
+                     x = "特征", y = "重要性得分")
+            print(p_xgb)
+            dev.off()
+
+            # 保存XGBoost特征重要性到Excel（只保存重要性列）
+            write.xlsx(xgb_imp_df[, c("Feature", "Importance")],
+                       file = file.path(features_dir, "xgb_model_features.xlsx"))
+
+            cat("XGBoost特征重要性分析完成\n")
+        } else {
+            warning("无法提取XGBoost特征重要性")
+        }
+    }
+
+    # ==================== 新增：组合特征重要性图 ====================
+    # 创建包含所有模型特征重要性的组合图[1](@ref)
+    cat("正在生成组合特征重要性图...\n")
+
+    tryCatch({
+        # 准备数据
+        all_imp_dfs <- list()
+
+        # 逻辑回归重要性
+        if (exists("coef_df")) {
+            coef_df$Model <- "Logistic Regression"
+            coef_df$Importance_Norm <- coef_df$Importance / max(coef_df$Importance)
+            all_imp_dfs$logistic <- coef_df
+        }
+
+        # 随机森林重要性
+        if (exists("rf_imp_df") && !all(is.na(rf_imp_df$Importance))) {
+            rf_imp_df$Model <- "Random Forest"
+            rf_imp_df$Importance_Norm <- rf_imp_df$Importance / max(rf_imp_df$Importance)
+            all_imp_dfs$rf <- rf_imp_df
+        }
+
+        # XGBoost重要性
+        if (exists("xgb_imp_df") && !all(is.na(xgb_imp_df$Importance))) {
+            xgb_imp_df$Model <- "XGBoost"
+            xgb_imp_df$Importance_Norm <- xgb_imp_df$Importance / max(xgb_imp_df$Importance)
+            all_imp_dfs$xgb <- xgb_imp_df
+        }
+
+        # 合并所有数据
+        if (length(all_imp_dfs) > 0) {
+            combined_imp <- do.call(rbind, all_imp_dfs)
+
+            # 绘制组合图
+            pdf(file = file.path(save_dir, "combined_feature_importance.pdf"), width = 12, height = 8)
+            p_combined <- ggplot(combined_imp, aes(x = reorder(Feature, Importance_Norm),
+                                                   y = Importance_Norm, fill = Model)) +
+                geom_bar(stat = "identity", position = "dodge") +
+                coord_flip() +
+                labs(title = "Combined Feature Importance Comparison",
+                     x = "特征", y = "标准化重要性得分",
+                     fill = "模型") +
+                theme_minimal() +
+                scale_fill_manual(values = c("#87CEEB", "#FF6B6B", "#4ECDC4")) +
+                facet_wrap(~Model, ncol = 1)
+            print(p_combined)
+            dev.off()
+
+            # 保存组合数据到Excel
+            write.xlsx(combined_imp, file = file.path(save_dir, "all_model_features.xlsx"))
+
+            cat("组合特征重要性分析完成\n")
         }
     }, error = function(e) {
-        # 如果上述方法失败，使用简单方法
-        tryCatch({
-            # 尝试通过特征在模型中的使用频率来估计重要性
-            xgb_imp_df <- data.frame(
-                Feature = top_features,
-                Importance = runif(length(top_features))  # 临时替代方案
-            )
-            warning("XGBoost特征重要性提取使用替代方法: ", e$message)
-        }, error = function(e2) {
-            xgb_imp_df <- data.frame(
-                Feature = top_features,
-                Importance = NA
-            )
-            warning("XGBoost特征重要性提取失败: ", e2$message)
-        })
+        warning("组合特征重要性图生成失败: ", e$message)
     })
-    
-    # 排序并清理数据
-    if (!all(is.na(xgb_imp_df$Importance))) {
-        xgb_imp_df <- xgb_imp_df[order(-xgb_imp_df$Importance), ]
-        xgb_imp_df <- xgb_imp_df[!is.na(xgb_imp_df$Importance), ]
-        
-        # 绘制XGBoost特征重要性图
-        pdf(file = file.path(features_dir, "xgb_feature_importance.pdf"))
-        p_xgb <- ggplot(xgb_imp_df, aes(x = reorder(Feature, Importance), y = Importance)) +
-            geom_col(fill = "#4ECDC4") +
-            coord_flip() +
-            labs(title = "XGBoost Feature Importance", 
-                 subtitle = "基于特征增益(Feature Gain)",
-                 x = "特征", y = "重要性得分")
-        print(p_xgb)
-        dev.off()
-        
-        # 保存XGBoost特征重要性到Excel（只保存重要性列）
-        write.xlsx(xgb_imp_df[, c("Feature", "Importance")], 
-                   file = file.path(features_dir, "xgb_model_features.xlsx"))
-        
-        cat("XGBoost特征重要性分析完成\n")
-    } else {
-        warning("无法提取XGBoost特征重要性")
-    }
-}
-
-# ==================== 新增：组合特征重要性图 ====================
-# 创建包含所有模型特征重要性的组合图[1](@ref)
-cat("正在生成组合特征重要性图...\n")
-
-tryCatch({
-    # 准备数据
-    all_imp_dfs <- list()
-    
-    # 逻辑回归重要性
-    if (exists("coef_df")) {
-        coef_df$Model <- "Logistic Regression"
-        coef_df$Importance_Norm <- coef_df$Importance / max(coef_df$Importance)
-        all_imp_dfs$logistic <- coef_df
-    }
-    
-    # 随机森林重要性
-    if (exists("rf_imp_df") && !all(is.na(rf_imp_df$Importance))) {
-        rf_imp_df$Model <- "Random Forest"
-        rf_imp_df$Importance_Norm <- rf_imp_df$Importance / max(rf_imp_df$Importance)
-        all_imp_dfs$rf <- rf_imp_df
-    }
-    
-    # XGBoost重要性
-    if (exists("xgb_imp_df") && !all(is.na(xgb_imp_df$Importance))) {
-        xgb_imp_df$Model <- "XGBoost"
-        xgb_imp_df$Importance_Norm <- xgb_imp_df$Importance / max(xgb_imp_df$Importance)
-        all_imp_dfs$xgb <- xgb_imp_df
-    }
-    
-    # 合并所有数据
-    if (length(all_imp_dfs) > 0) {
-        combined_imp <- do.call(rbind, all_imp_dfs)
-        
-        # 绘制组合图
-        pdf(file = file.path(save_dir, "combined_feature_importance.pdf"), width = 12, height = 8)
-        p_combined <- ggplot(combined_imp, aes(x = reorder(Feature, Importance_Norm), 
-                                              y = Importance_Norm, fill = Model)) +
-            geom_bar(stat = "identity", position = "dodge") +
-            coord_flip() +
-            labs(title = "Combined Feature Importance Comparison",
-                 x = "特征", y = "标准化重要性得分",
-                 fill = "模型") +
-            theme_minimal() +
-            scale_fill_manual(values = c("#87CEEB", "#FF6B6B", "#4ECDC4")) +
-            facet_wrap(~Model, ncol = 1)
-        print(p_combined)
-        dev.off()
-        
-        # 保存组合数据到Excel
-        write.xlsx(combined_imp, file = file.path(save_dir, "all_model_features.xlsx"))
-        
-        cat("组合特征重要性分析完成\n")
-    }
-}, error = function(e) {
-    warning("组合特征重要性图生成失败: ", e$message)
-})
 
 
 
