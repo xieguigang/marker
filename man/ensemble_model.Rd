@@ -4,7 +4,7 @@
 \alias{ensemble_model}
 \title{Ensemble Model Training, Validation and Visualization}
 \usage{
-ensemble_model(X, y, selected_features)
+ensemble_model(X, y, selected_features, save_dir)
 }
 \arguments{
 \item{X}{A data frame or matrix containing the feature variables where rows represent samples and columns represent features. Must contain the columns specified in \code{selected_features}.}

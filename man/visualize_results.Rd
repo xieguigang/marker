@@ -4,7 +4,7 @@
 \alias{visualize_results}
 \title{Comprehensive Visualization for Machine Learning Model Results}
 \usage{
-visualize_results(results, X, y, top_features)
+visualize_results(results, X, y, top_features, save_dir)
 }
 \arguments{
 \item{results}{A list object containing trained model objects and evaluation metrics.
