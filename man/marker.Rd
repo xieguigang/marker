@@ -14,55 +14,42 @@ marker(
 )
 }
 \arguments{
-\item{file_path}{Character string specifying the path to the input data file.
-The file should contain both features and class labels.}
+\item{file_path}{Character string specifying the path to the input data file. The file should contain both features and class labels and be readable into a data frame.}
 
-\item{class}{Vector specifying the class labels to be included in the analysis.
-Only samples with these class labels will be used.}
+\item{class}{Vector specifying the class labels to be included in the analysis. Only samples with these class labels will be used.}
 
-\item{sel_features}{Optional character vector of pre-selected features.
-If provided (default is NULL), the function skips automated feature
-selection and uses these features directly.}
+\item{sel_features}{Optional character vector of pre-selected features. If provided (default is NULL), the function skips automated feature selection and uses these features directly.}
 
-\item{training_size}{Numeric value between 0 and 1 specifying the proportion
-of data to be used for training. Default is 0.7 (70% training, 30% testing).}
+\item{training_size}{Numeric value between 0 and 1 specifying the proportion of data to be used for training. Default is 0.7 (70% training, 30% testing).}
 
-\item{top_features}{Integer specifying the number of top features to select
-when \code{sel_features} is NULL. Default is 6.}
+\item{top_features}{Integer specifying the number of top features to select when \code{sel_features} is NULL. Default is 6.}
 
-\item{save_dir}{Character string specifying the directory path for saving
-results. Default is current directory ("./").}
+\item{save_dir}{Character string specifying the directory path for saving results. Default is current directory ("./"). The function will create subdirectories (e.g., "linears", "machine_learning", "data") under this path if they do not exist.}
 }
 \value{
-Invisibly returns \code{NULL}. The function primarily generates
-   visualization outputs and prints diagnostic information to the console.
-   Key side effects include:
-   \itemize{
-     \item Feature selection results when \code{sel_features} is NULL
-     \item Model ensemble performance metrics
-     \item Visualization plots in the specified directory
-   }
+Invisibly returns \code{NULL}. The function primarily generates side effects including:
+\itemize{
+  \item Feature selection results (when \code{sel_features} is NULL) saved as "feature_selection.json"
+  \item Model ensemble performance metrics and plots in the "machine_learning" subdirectory
+  \item PCA plot, linear analysis results, and statistical data in respective subdirectories
+  \item Training and testing datasets saved in the "data" subdirectory
+}
 }
 \description{
-This function performs comprehensive marker identification and validation
-through a multi-step process including data loading, feature selection,
-model ensemble and result visualization. It integrates LASSO, Random Forest
-and SVM-RFE algorithms for robust feature selection.
+This function performs comprehensive marker identification and validation through a multi-step process including data loading, feature selection, model ensemble, and result visualization. It integrates LASSO, Random Forest, and SVM-RFE algorithms for robust feature selection.
 }
 \details{
 The function executes the following pipeline:
 \enumerate{
   \item Data loading and preprocessing using \code{preprocess_data()}
-  \item Feature selection (if \code{sel_features} not provided) using three
-        methods: LASSO, Random Forest, and SVM-RFE
-  \item Data splitting into training and testing sets
-  \item Model ensemble training on selected features
-  \item Result visualization and performance assessment
+  \item Initial visualization and statistical analysis (PCA, linear models, descriptive statistics)
+  \item Feature selection (if \code{sel_features} not provided) using three methods: LASSO, Random Forest, and SVM-RFE
+  \item Data splitting into training and testing sets using \code{createDataPartition}
+  \item Model ensemble training on selected features using \code{ensemble_model}
+  \item Result visualization and performance assessment using \code{visualize_results}
 }
 
-When \code{sel_features} is NULL, the feature selection process combines
-results from multiple algorithms and selects the most frequently identified
-features based on \code{top_features} parameter.
+When \code{sel_features} is NULL, the feature selection process combines results from multiple algorithms and selects the most frequently identified features based on the \code{top_features} parameter.
 }
 \examples{
 \dontrun{
@@ -79,7 +66,7 @@ marker("data.csv", class = c("A", "B"),
 
 }
 \seealso{
-Related functions:
-\code{\link{preprocess_data}}, \code{\link{run_lasso}},
-\code{\link{ensemble_model}}, \code{\link{visualize_results}}
+Related functions used internally:
+\code{\link{preprocess_data}}, \code{\link{run_lasso}}, \code{\link{run_random_forest}},
+\code{\link{run_svm_rfe}}, \code{\link{ensemble_model}}, \code{\link{visualize_results}}
 }
