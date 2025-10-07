@@ -358,42 +358,42 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
 
     write.xlsx(coef_df, file = file.path( save_dir, "model_features.xlsx"));
 
-    library(fastshap)
-    library(shapviz)
+    # library(fastshap)
+    # library(shapviz)
 
-    # 若需输出类别预测（0/1）
-    pred_wrapper_class <- function(model, newdata) {
-        as.numeric(predict(model, newdata = newdata, type = "response") > 0.5)
-    }
-    shap_values <- explain(nomogram_model, X = as.data.frame( X[, top_features]),
-                           pred_wrapper =pred_wrapper_class,  # 必须指定
-                           nsim = 100,  # 蒙特卡洛模拟次数，建议 >= 100
-                           shap_only = FALSE
-    );
-    shap_viz <- shapviz(shap_values)
+    # # 若需输出类别预测（0/1）
+    # pred_wrapper_class <- function(model, newdata) {
+    #     as.numeric(predict(model, newdata = newdata, type = "response") > 0.5)
+    # }
+    # shap_values <- explain(nomogram_model, X = as.data.frame( X[, top_features]),
+    #                        pred_wrapper =pred_wrapper_class,  # 必须指定
+    #                        nsim = 100,  # 蒙特卡洛模拟次数，建议 >= 100
+    #                        shap_only = FALSE
+    # );
+    # shap_viz <- shapviz(shap_values)
 
-    # 提取核心结果
-    shap_matrix <- shap_values$shapley_values
-    baseline <- shap_values$baseline
+    # # 提取核心结果
+    # shap_matrix <- shap_values$shapley_values
+    # baseline <- shap_values$baseline
 
-    # 导出CSV
-    write.csv(shap_matrix, file.path( save_dir, "SHAP_Values.csv"), row.names = TRUE, quote = FALSE)
+    # # 导出CSV
+    # write.csv(shap_matrix, file.path( save_dir, "SHAP_Values.csv"), row.names = TRUE, quote = FALSE)
 
-    # 导出Excel
-    wb <- createWorkbook()
-    addWorksheet(wb, "SHAP_Values")
-    writeData(wb, 1, shap_matrix, rowNames = TRUE)
-    addWorksheet(wb, "Baseline")
-    writeData(wb, 2, data.frame(Baseline = baseline))
-    saveWorkbook(wb, file.path( save_dir, "shap_results.xlsx"), overwrite = TRUE)
+    # # 导出Excel
+    # wb <- createWorkbook()
+    # addWorksheet(wb, "SHAP_Values")
+    # writeData(wb, 1, shap_matrix, rowNames = TRUE)
+    # addWorksheet(wb, "Baseline")
+    # writeData(wb, 2, data.frame(Baseline = baseline))
+    # saveWorkbook(wb, file.path( save_dir, "shap_results.xlsx"), overwrite = TRUE)
 
 
-    # 3. 可视化
-    pdf(file = file.path(save_dir, "shap.pdf"));
-    print(sv_importance(shap_viz))  # 全局特征重要性
-    # 蜂群图（Beeswarm plot）
-    print(sv_waterfall(shap_viz, row_id = 1))  # 单个样本解释
-    dev.off();
+    # # 3. 可视化
+    # pdf(file = file.path(save_dir, "shap.pdf"));
+    # print(sv_importance(shap_viz))  # 全局特征重要性
+    # # 蜂群图（Beeswarm plot）
+    # print(sv_waterfall(shap_viz, row_id = 1))  # 单个样本解释
+    # dev.off();
 
 
     pdf(file = file.path(save_dir, "nomogram.pdf"), width = 24,height = 8, family = "GB1");
@@ -408,7 +408,7 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
     plot(nom,xfrac = 0.1,cex.var = 1.5, cex.axis = 0.85   )
     dev.off();
 
-    
+
     shap_dir = file.path(save_dir,"shap_analysis");
     dir.create(shap_dir, showWarnings = FALSE, recursive = TRUE);
 
@@ -420,138 +420,132 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
     library(DALEX)
     library(ggplot2)
     library(openxlsx)
-    
+
     # ==================== SHAP分析通用函数 ====================
-    
+
     # 生成SHAP分析报告的函数
     generate_shap_report <- function(model, model_name, X_data, features, model_type) {
         cat("正在进行", model_name, "模型的SHAP分析...\n")
-        
+
         # 创建模型专属目录
         model_shap_dir <- file.path(shap_dir, model_name);
         dir.create(model_shap_dir, showWarnings = FALSE, recursive = TRUE);
-        
-        tryCatch({
-            # 根据模型类型定义预测函数
-            if (model_type == "nomogram") {
-                # 逻辑回归模型的预测函数
-                pred_function <- function(object, newdata) {
-                    predict(object, newdata = newdata, type = "response")
-                }
-            } else if (model_type == "xgboost") {
-                # XGBoost模型的预测函数
-                pred_function <- function(object, newdata) {
-                    predict(object, as.matrix(newdata))
-                }
-            } else if (model_type == "randomforest") {
-                # 随机森林模型的预测函数
-                pred_function <- function(object, newdata) {
-                    predict(object, newdata)$predictions
-                }
+
+        # 根据模型类型定义预测函数
+        if (model_type == "nomogram") {
+            # 逻辑回归模型的预测函数
+            pred_function <- function(object, newdata) {
+                predict(object, newdata = newdata, type = "response")
             }
-            
-            # 计算SHAP值（使用抽样以提高计算效率）
-            n_samples <- min(100, nrow(X_data))
-            set.seed(123)
-            sample_indices <- sample(1:nrow(X_data), n_samples)
-            X_sampled <- X_data[sample_indices, features, drop = FALSE]
-            
-            # 使用fastshap计算SHAP值
-            shap_values <- fastshap::explain(
-                model,
-                X = X_sampled,
-                pred_wrapper = pred_function,
-                nsim = 50  # SHAP模拟次数
-            )
-            
-            # 创建shapviz对象
-            shap_viz <- shapviz(shap_values, X = X_sampled)
-            
-            # ==================== 导出SHAP矩阵 ====================
-            shap_matrix <- as.data.frame(shap_values)
-            write.csv(shap_matrix, file.path(model_shap_dir, paste0(model_name, "_shap_matrix.csv")), 
-                     row.names = TRUE)
-            
-            # 导出到Excel
-            wb <- createWorkbook()
-            addWorksheet(wb, "SHAP_Values")
-            writeData(wb, "SHAP_Values", shap_matrix, rowNames = TRUE)
-            saveWorkbook(wb, file.path(model_shap_dir, paste0(model_name, "_shap_results.xlsx")), 
-                        overwrite = TRUE)
-            
-            # ==================== SHAP可视化 ====================
-            
-            # 1. SHAP条形图（特征重要性）
-            pdf(file = file.path(model_shap_dir, paste0(model_name, "_shap_barplot.pdf")), 
-                width = 10, height = 6)
-            print(sv_importance(shap_viz, kind = "bar") + 
+        } else if (model_type == "xgboost") {
+            # XGBoost模型的预测函数
+            pred_function <- function(object, newdata) {
+                predict(object, as.matrix(newdata))
+            }
+        } else if (model_type == "randomforest") {
+            # 随机森林模型的预测函数
+            pred_function <- function(object, newdata) {
+                predict(object, newdata)$predictions
+            }
+        }
+
+        # 计算SHAP值（使用抽样以提高计算效率）
+        n_samples <- min(100, nrow(X_data))
+        set.seed(123)
+        sample_indices <- sample(1:nrow(X_data), n_samples)
+        X_sampled <- X_data[sample_indices, features, drop = FALSE]
+
+        # 使用fastshap计算SHAP值
+        shap_values <- fastshap::explain(
+            model,
+            X = X_sampled,
+            pred_wrapper = pred_function,
+            nsim = 50  # SHAP模拟次数
+        )
+
+        # 创建shapviz对象
+        shap_viz <- shapviz(shap_values, X = X_sampled)
+
+        # ==================== 导出SHAP矩阵 ====================
+        shap_matrix <- as.data.frame(shap_values)
+        write.csv(shap_matrix, file.path(model_shap_dir, paste0(model_name, "_shap_matrix.csv")),
+                  row.names = TRUE)
+
+        # 导出到Excel
+        wb <- createWorkbook()
+        addWorksheet(wb, "SHAP_Values")
+        writeData(wb, "SHAP_Values", shap_matrix, rowNames = TRUE)
+        saveWorkbook(wb, file.path(model_shap_dir, paste0(model_name, "_shap_results.xlsx")),
+                     overwrite = TRUE)
+
+        # ==================== SHAP可视化 ====================
+
+        # 1. SHAP条形图（特征重要性）
+        pdf(file = file.path(model_shap_dir, paste0(model_name, "_shap_barplot.pdf")),
+            width = 10, height = 6)
+        print(sv_importance(shap_viz, kind = "bar") +
                   ggtitle(paste(model_name, "SHAP Feature Importance")) +
                   theme_minimal())
-            dev.off()
-            
-            # 2. SHAP蜂群图
-            pdf(file = file.path(model_shap_dir, paste0(model_name, "_shap_beeswarm.pdf")), 
-                width = 10, height = 6)
-            print(sv_importance(shap_viz, kind = "beeswarm") + 
+        dev.off()
+
+        # 2. SHAP蜂群图
+        pdf(file = file.path(model_shap_dir, paste0(model_name, "_shap_beeswarm.pdf")),
+            width = 10, height = 6)
+        print(sv_importance(shap_viz, kind = "beeswarm") +
                   ggtitle(paste(model_name, "SHAP Beeswarm Plot")) +
                   theme_minimal())
-            dev.off()
-            
-            # 3. SHAP瀑布图（前5个样本）
-            pdf(file = file.path(model_shap_dir, paste0(model_name, "_shap_waterfall.pdf")), 
-                width = 12, height = 8)
-            for (i in 1:min(5, n_samples)) {
-                print(sv_waterfall(shap_viz, row_id = i) + 
+        dev.off()
+
+        # 3. SHAP瀑布图（前5个样本）
+        pdf(file = file.path(model_shap_dir, paste0(model_name, "_shap_waterfall.pdf")),
+            width = 12, height = 8)
+        for (i in 1:min(5, n_samples)) {
+            print(sv_waterfall(shap_viz, row_id = i) +
                       ggtitle(paste(model_name, "SHAP Waterfall Plot - Sample", i)) +
                       theme_minimal())
-            }
-            dev.off()
-            
-            # 4. 综合SHAP报告
-            pdf(file = file.path(model_shap_dir, paste0(model_name, "_shap_comprehensive.pdf")), 
-                width = 12, height = 10)
-            
-            # 特征重要性条形图
-            print(sv_importance(shap_viz, kind = "bar") + 
+        }
+        dev.off()
+
+        # 4. 综合SHAP报告
+        pdf(file = file.path(model_shap_dir, paste0(model_name, "_shap_comprehensive.pdf")),
+            width = 12, height = 10)
+
+        # 特征重要性条形图
+        print(sv_importance(shap_viz, kind = "bar") +
                   ggtitle(paste(model_name, "SHAP Feature Importance")))
-            
-            # 蜂群图
-            print(sv_importance(shap_viz, kind = "beeswarm") + 
+
+        # 蜂群图
+        print(sv_importance(shap_viz, kind = "beeswarm") +
                   ggtitle(paste(model_name, "SHAP Beeswarm Plot")))
-            
-            # 前3个样本的瀑布图
-            for (i in 1:min(3, n_samples)) {
-                print(sv_waterfall(shap_viz, row_id = i) + 
+
+        # 前3个样本的瀑布图
+        for (i in 1:min(3, n_samples)) {
+            print(sv_waterfall(shap_viz, row_id = i) +
                       ggtitle(paste(model_name, "SHAP Waterfall - Sample", i)))
-            }
-            
-            dev.off()
-            
-            cat(model_name, "SHAP分析完成，结果保存在:", model_shap_dir, "\n")
-            
-            return(TRUE)
-            
-        }, error = function(e) {
-            cat(model_name, "SHAP分析出错:", e$message, "\n")
-            return(FALSE)
-        })
+        }
+
+        dev.off()
+
+        cat(model_name, "SHAP分析完成，结果保存在:", model_shap_dir, "\n")
+
+        return(TRUE)
     }
-    
+
     # ==================== 对各模型执行SHAP分析 ====================
-    
+
+    # 3. Random Forest模型SHAP分析
+    if (!is.null(rf_model)) {
+        generate_shap_report(rf_model, "randomforest", dX, top_features, "randomforest")
+    }
+
     # 1. Nomogram模型（逻辑回归）SHAP分析
     if (!is.null(nomogram_model)) {
         generate_shap_report(nomogram_model, "nomogram", dX, top_features, "nomogram")
     }
-    
+
     # 2. XGBoost模型SHAP分析
     if (!is.null(xgb_model)) {
         generate_shap_report(xgb_model, "xgboost", dX, top_features, "xgboost")
-    }
-    
-    # 3. Random Forest模型SHAP分析
-    if (!is.null(rf_model)) {
-        generate_shap_report(rf_model, "randomforest", dX, top_features, "randomforest")
     }
 
     invisible(NULL);
