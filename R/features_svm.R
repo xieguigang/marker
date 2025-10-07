@@ -132,7 +132,7 @@ run_svm_rfe <- function(X, y, n_features = 5, metric = "Accuracy", kernel = "rad
 
             list(
                 features = predictors(rfe_results),
-                model = rfe_results$fit,
+                model = toString( rfe_results$fit),
                 error = rfe_results$resample$RMSE
             )
         },

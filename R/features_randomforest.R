@@ -63,7 +63,7 @@ run_random_forest <- function(X, y, ntree = 500) {
 
             list(
                 features = importance_df$feature[importance_df$importance > 0.5],
-                model = rf_model,
+                model = toString( rf_model),
                 oob_error = rf_model$err.rate[nrow(rf_model$err.rate), "OOB"]
             );
         },

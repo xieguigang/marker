@@ -58,7 +58,7 @@ run_lasso <- function(X, y, lambda = 0.01) {
 
             list(
                 features = selected_features,
-                model = best_model,
+                model = toString( best_model),
                 cv_error = min(cv_fit$cvm)
             );
         },
