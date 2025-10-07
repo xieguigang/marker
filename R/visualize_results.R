@@ -474,7 +474,7 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
         # 3. SHAP瀑布图（前5个样本）
         pdf(file = file.path(model_shap_dir, paste0(model_name, "_shap_waterfall.pdf")),
             width = 12, height = 8)
-        for (i in 1:min(5, n_samples)) {
+        for (i in 1:min(10, n_samples)) {
             print(sv_waterfall(shap_viz, row_id = i) +
                       ggtitle(paste(model_name, "SHAP Waterfall Plot - Sample", i)) +
                       theme_minimal())
@@ -494,7 +494,7 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
                   ggtitle(paste(model_name, "SHAP Beeswarm Plot")))
 
         # 前3个样本的瀑布图
-        for (i in 1:min(3, n_samples)) {
+        for (i in 1:min(10, n_samples)) {
             print(sv_waterfall(shap_viz, row_id = i) +
                       ggtitle(paste(model_name, "SHAP Waterfall - Sample", i)))
         }
