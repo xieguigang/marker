@@ -1,57 +1,69 @@
 #' Perform single metabolite linear regression analysis with comprehensive evaluation
 #'
-#' This function conducts linear regression analysis for each metabolite in the dataset,
+#' This function conducts linear regression analysis for each metabolite in a metabolomics dataset,
 #' evaluating the relationship between metabolite concentration and treatment classification.
-#' It generates comprehensive performance metrics, ROC curves, and visualization plots.
+#' It generates comprehensive performance metrics, ROC curves, and visualization plots 
+#' for each metabolite, facilitating biomarker discovery and analysis.
 #'
-#' @param data A data frame containing the metabolomics data. The first column should be 
-#'   the class labels (as factor), and subsequent columns represent metabolite concentrations.
-#' @param CON Character string specifying the name of the negative control/normal group 
-#'   in the class column (e.g., "Control" or "Normal").
-#' @param Treatment Character string specifying the name of the treatment group 
-#'   in the class column (e.g., "Case" or "Disease").
+#' @param data A data frame containing the metabolomics data. The dataset must include 
+#'   a column named 'class' containing the group labels as a factor, with subsequent 
+#'   columns representing metabolite concentrations. The 'class' column should contain 
+#'   exactly two levels corresponding to the CON and Treatment groups.
+#' @param CON Character string specifying the name of the control/reference group 
+#'   in the 'class' column (e.g., "Control" or "Normal").
+#' @param Treatment Character string specifying the name of the treatment/experimental group 
+#'   in the 'class' column (e.g., "Case" or "Disease").
+#' @param save_dir Character string specifying the directory path where all output 
+#'   files (results, plots) will be saved. The directory will be created if it doesn't exist.
+#' @param top_plots Integer specifying the number of top-performing metabolites 
+#'   (ranked by AUC) for which individual plots will be generated. Default is 50.
 #'
-#' @return A data frame with one row per metabolite containing the following columns:
+#' @return A data frame with one row per metabolite, sorted in descending order by AUC value.
+#'   The data frame contains the following columns:
 #' \itemize{
-#'   \item Metabolite: Character, name of the metabolite
-#'   \item Model_Equation: Character, linear regression equation
-#'   \item R2: Numeric, R-squared value of the linear model
-#'   \item AUC: Numeric, area under the ROC curve
-#'   \item Accuracy: Numeric, classification accuracy at optimal threshold
-#'   \item FPR: Numeric, false positive rate
-#'   \item Sensitivity: Numeric, true positive rate
-#'   \item Specificity: Numeric, true negative rate
-#'   \item F1score: Numeric, F1 score (harmonic mean of precision and sensitivity)
-#'   \item log2FC: Numeric, log2 fold change between treatment and control groups
-#'   \item pvalue: Numeric, p-value from t-test between groups
+#'   \item \code{Metabolite}: Character, name of the metabolite (column name from input data)
+#'   \item \code{Model_Equation}: Character, linear regression equation in the format "Treatment_Prob = intercept + slope * metabolite"
+#'   \item \code{R2}: Numeric, R-squared value of the linear model indicating goodness-of-fit
+#'   \item \code{AUC}: Numeric, area under the ROC curve ranging from 0 to 1 (higher values indicate better classification)
+#'   \item \code{Accuracy}: Numeric, classification accuracy at optimal threshold determined by ROC analysis
+#'   \item \code{FPR}: Numeric, false positive rate (1 - specificity) at optimal threshold
+#'   \item \code{Sensitivity}: Numeric, true positive rate at optimal threshold
+#'   \item \code{Specificity}: Numeric, true negative rate at optimal threshold
+#'   \item \code{F1score}: Numeric, F1 score (harmonic mean of precision and sensitivity)
+#'   \item \code{log2FC}: Numeric, log2 fold change between treatment and control groups
+#'   \item \code{pvalue}: Numeric, p-value from Welch's t-test comparing group means
 #' }
 #'
 #' @details
-#' This function performs the following analysis for each metabolite:
+#' This function performs comprehensive analysis for each metabolite in the dataset:
 #' \enumerate{
 #'   \item Fits a linear regression model: class ~ metabolite concentration
 #'   \item Calculates ROC curve and AUC using predictions from the linear model
 #'   \item Determines optimal classification threshold maximizing accuracy
-#'   \item Computes comprehensive performance metrics (accuracy, sensitivity, specificity, F1)
+#'   \item Computes performance metrics (accuracy, sensitivity, specificity, F1 score)
 #'   \item Calculates log2 fold change and statistical significance between groups
 #'   \item Generates individual ROC plots and grouped bar plots with statistical annotations
 #'   \item Saves top 10 metabolites by AUC in a combined ROC plot
 #' }
 #'
-#' The function creates two directories: "Individual_ROCs" for ROC curves and 
-#' "Barplots" for concentration comparison plots. It also exports an Excel file 
+#' The function creates two subdirectories within \code{save_dir}: "Individual_ROCs" for 
+#' ROC curves and "Barplots" for concentration comparison plots. It also exports an Excel file 
 #' with complete results and displays top performers in the console.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Load example metabolomics data
 #' data <- read.csv("metabolite_data.csv")
 #' 
-#' # Ensure class column is factor
+#' # Ensure class column is factor with correct levels
 #' data$class <- as.factor(data$class)
 #' 
+#' # Create output directory
+#' output_dir <- "analysis_results"
+#' 
 #' # Run analysis comparing "Control" vs "Treatment" groups
-#' results <- single_linear(data, CON = "Control", Treatment = "Treatment")
+#' results <- single_linear(data, CON = "Control", Treatment = "Treatment", 
+#'                         save_dir = output_dir, top_plots = 20)
 #' 
 #' # View top 10 metabolites by AUC
 #' head(results, 10)
@@ -60,9 +72,10 @@
 #' @seealso
 #' Useful links:
 #' \itemize{
-#'   \item \code{\link[stats]{lm}} for linear regression
+#'   \item \code{\link[stats]{lm}} for linear regression modeling
 #'   \item \code{\link[pROC]{roc}} for ROC curve calculation
 #'   \item \code{\link[ggplot2]{ggplot}} for visualization
+#'   \item \code{\link[stats]{t.test}} for statistical testing between groups
 #' }
 #'
 #' @export
