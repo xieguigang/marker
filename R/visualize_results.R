@@ -138,8 +138,8 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
     lines(train_roc, col = "red", lwd = 2)
 
     legend("bottomright",
-           legend = c(paste("Train Data (AUC =", round(auc(train_roc), 3), ")"),
-                      paste("Test Data (AUC =", round(auc(roc_nomogram), 3), ")")
+           legend = c(paste("Test Data (AUC =", round(auc(roc_nomogram), 3), ")"),
+                      paste("Train Data (AUC =", round(auc(train_roc), 3), ")")                      
            ),
            col = c("blue", "red"), lty = 1, lwd = 2)
 
@@ -181,8 +181,8 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
     lines(train_roc, col = "red", lwd = 2)
 
     legend("bottomright",
-           legend = c(paste("Train Data (AUC =", round(auc(train_roc), 3), ")"),
-                      paste("Test Data (AUC =", round(auc(roc_xgb), 3), ")")
+           legend = c(paste("Test Data (AUC =", round(auc(roc_xgb), 3), ")"),
+                      paste("Train Data (AUC =", round(auc(train_roc), 3), ")")                      
            ),
            col = c("blue", "red"), lty = 1, lwd = 2)
 
@@ -223,13 +223,12 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
     lines(train_roc, col = "red", lwd = 2)
 
     legend("bottomright",
-           legend = c(paste("Train Data (AUC =", round(auc(train_roc), 3), ")"),
-                      paste("Test Data (AUC =", round(auc(roc_rf ), 3), ")")
+           legend = c(paste("Test Data (AUC =", round(auc(roc_rf ), 3), ")"),
+                      paste("Train Data (AUC =", round(auc(train_roc), 3), ")")                      
            ),
            col = c("blue", "red"), lty = 1, lwd = 2)
 
     dev.off();
-
 
     # 计算每个模型在训练集和测试集上的性能指标
     calculate_metrics <- function(model, features, data_type = "test") {
