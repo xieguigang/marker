@@ -2,7 +2,7 @@
 #'
 #' This function performs comprehensive marker identification and validation through a multi-step process including data loading, feature selection, model ensemble, and result visualization. It integrates LASSO, Random Forest, and SVM-RFE algorithms for robust feature selection.
 #'
-#' @param file_path Character string specifying the path to the input data file. The file should contain both features and class labels and be readable into a data frame.
+#' @param data Character string specifying the path to the input data file. The file should contain both features and class labels and be readable into a data frame.
 #' @param class Vector specifying the class labels to be included in the analysis. Only samples with these class labels will be used.
 #' @param sel_features Optional character vector of pre-selected features. If provided (default is NULL), the function skips automated feature selection and uses these features directly.
 #' @param training_size Numeric value between 0 and 1 specifying the proportion of data to be used for training. Default is 0.7 (70% training, 30% testing).
@@ -49,9 +49,9 @@
 #' \code{\link{run_svm_rfe}}, \code{\link{ensemble_model}}, \code{\link{visualize_results}}
 #'
 #' @export
-marker = function(file_path, class, sel_features = NULL, training_size = 0.7, top_features = 6, save_dir= "./") {
+marker = function(data, class, sel_features = NULL, training_size = 0.7, top_features = 6, save_dir= "./") {
     # 1. 加载数据
-    data <- dataframe(data = file_path);
+    data <- dataframe(data = data);
     preprocessed <- preprocess_data(data[data$class %in% class,], labels = class);
     X <- preprocessed$X
     y <- preprocessed$y

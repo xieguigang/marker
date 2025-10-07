@@ -5,7 +5,7 @@
 \title{Marker Identification for Classification Models}
 \usage{
 marker(
-  file_path,
+  data,
   class,
   sel_features = NULL,
   training_size = 0.7,
@@ -14,7 +14,7 @@ marker(
 )
 }
 \arguments{
-\item{file_path}{Character string specifying the path to the input data file. The file should contain both features and class labels and be readable into a data frame.}
+\item{data}{Character string specifying the path to the input data file. The file should contain both features and class labels and be readable into a data frame.}
 
 \item{class}{Vector specifying the class labels to be included in the analysis. Only samples with these class labels will be used.}
 

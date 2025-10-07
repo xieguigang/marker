@@ -2,41 +2,86 @@
 % Please edit documentation in R/utils.R
 \name{dataframe}
 \alias{dataframe}
-\title{Flexibly convert input data to a data frame}
+\title{Convert Input to Data Frame with Class Column Validation}
 \usage{
 dataframe(data)
 }
 \arguments{
-\item{data}{An input object to be converted. Can be a character string (interpreted as a file path),
-an existing data frame (returned as-is), or a list (coerced to data frame using `as.data.frame`).}
+\item{data}{An input object to be converted. Can be:
+\itemize{
+  \item A character string (interpreted as a file path to a CSV file)
+  \item An existing data frame (returned as-is after validation)
+  \item A list (coerced to data frame using `as.data.frame`)
+}}
 }
 \value{
-A data frame. If the input is a character string pointing to a CSV file, the function returns
-  the contents of that file as a data frame. If the input is already a data frame, it is returned unchanged.
-  If the input is a list, it is converted to a data frame.
+A data frame with the following characteristics:
+  \itemize{
+    \item If input is a character string: contents of the CSV file as a data frame
+    \item If input is a data frame: the same data frame with validated 'class' column
+    \item If input is a list: a data frame coerced from the list
+    \item The 'class' column is guaranteed to be in the first position
+    \item Other columns maintain their original order
+  }
 }
 \description{
 This function handles multiple input types (file path, data frame, list, etc.)
-and converts them into a data frame. It is particularly useful for ensuring
-downstream functions receive a consistent data structure. When a character
-string is provided, it is treated as a file path and read using `read.csv()`
-with settings suitable for bioinformatics data (e.g., preserving numeric column names).
+  and converts them into a data frame. It is particularly useful for ensuring downstream 
+  functions receive a consistent data structure. The function validates the presence of 
+  a 'class' column and reorders it to the first position for convenience in classification tasks.
 }
+\details{
+Flexibly convert input data to a data frame
+
+
+This function is designed for robustness in data preprocessing pipelines, especially in 
+bioinformatics and machine learning contexts where a 'class' label column is often required.
+When a character string is provided, it is treated as a file path and read using `read.csv()` 
+with settings suitable for bioinformatics data (e.g., `check.names = FALSE` preserves 
+numeric column names, `row.names = 1` sets the first column as row names). 
+
+Key features:
+\itemize{
+  \item Handles character (file paths), data frames, and lists inputs
+  \item Validates the existence of a 'class' column critical for supervised learning
+  \item Reorders columns to ensure 'class' is first while preserving other column order
+  \item Uses conservative CSV reading settings to maintain data integrity
+}
+}
+\section{Errors}{
+
+The function will stop with an error message in these cases:
+\itemize{
+  \item Input cannot be converted to a data frame (e.g., numeric input)
+  \item The resulting data frame lacks a 'class' column
+  \item File path provided but file doesn't exist or can't be read
+}
+}
+
 \examples{
+# Example with CSV file (requires valid file path)
 \dontrun{
-# From a CSV file
 df1 <- dataframe("path/to/your/file.csv")
-
-# From an existing data frame
-df2 <- dataframe(iris)
-
-# From a list
-my_list <- list(a = 1:3, b = letters[1:3])
-df3 <- dataframe(my_list)
 }
+
+# Example with data frame (iris dataset modified to include 'class' column)
+iris_df <- iris
+iris_df$class <- ifelse(iris_df$Species == "setosa", "setosa", "other")
+df2 <- dataframe(iris_df)
+head(df2)
+
+# Example with list input
+my_list <- list(class = c("A", "B", "A"), value = c(1, 2, 3))
+df3 <- dataframe(my_list)
+print(df3)
 
 }
 \seealso{
-Base functions used: \code{\link[base]{is.character}}, \code{\link[base]{is.data.frame}},
+Base functions used: 
+\code{\link[base]{is.character}}, \code{\link[base]{is.data.frame}},
 \code{\link[base]{is.list}}, \code{\link[utils]{read.csv}}, \code{\link[base]{as.data.frame}}
+
+Related packages for enhanced functionality:
+\code{\link[readr]{read_csv}} for faster CSV reading,
+\code{\link[data.table]{fread}} for large file support
 }
