@@ -646,6 +646,40 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
             nsim = 100  # SHAP模拟次数
         )
 
+        # ==================== 新增：SHAP统计表格生成 ====================
+        cat("正在生成", model_name, "模型的SHAP统计表格...\n")
+
+        # 计算每个特征的SHAP统计量
+        shap_stats <- data.frame(
+            feature_name = colnames(shap_values),
+            shap_mean = apply(shap_values, 2, mean),
+            shap_min = apply(shap_values, 2, min),
+            shap_max = apply(shap_values, 2, max),
+            shap_sd = apply(shap_values, 2, sd),  # 额外添加标准差
+            shap_abs_mean = apply(abs(shap_values), 2, mean)  # 平均绝对SHAP值（特征重要性）
+        )
+
+        # 按平均绝对SHAP值排序（特征重要性排序）
+        shap_stats <- shap_stats[order(-shap_stats$shap_abs_mean), ]
+
+        # 保存SHAP统计表格到Excel
+        write.xlsx(shap_stats,
+                   file = file.path(model_shap_dir,
+                                    paste0(model_name, "_shap_statistics.xlsx")),
+                   rowNames = FALSE)
+
+        # 保存SHAP统计表格到CSV
+        write.csv(shap_stats,
+                  file = file.path(model_shap_dir,
+                                   paste0(model_name, "_shap_statistics.csv")),
+                  row.names = FALSE)
+
+        # 打印统计摘要
+        cat(model_name, "模型SHAP统计摘要:\n")
+        print(shap_stats)
+        cat("\n")
+
+
         # 创建shapviz对象
         shap_viz <- shapviz(shap_values, X = X_sampled)
 
@@ -658,6 +692,8 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
         wb <- createWorkbook()
         addWorksheet(wb, "SHAP_Values")
         writeData(wb, "SHAP_Values", shap_matrix, rowNames = TRUE)
+        addWorksheet(wb, "SHAP_Statistics")  # 新增统计表格工作表
+        writeData(wb, "SHAP_Statistics", shap_stats, rowNames = FALSE)
         saveWorkbook(wb, file.path(model_shap_dir, paste0(model_name, "_shap_results.xlsx")),
                      overwrite = TRUE)
 
@@ -711,10 +747,12 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
 
         cat(model_name, "SHAP分析完成，结果保存在:", model_shap_dir, "\n")
 
-        return(TRUE)
+        return(list(shap_values = shap_values, shap_stats = shap_stats))
     }
 
     # ==================== 对各模型执行SHAP分析 ====================
+
+    shap_results <- list()
 
     # 3. Random Forest模型SHAP分析
     if (!is.null(rf_model)) {
@@ -744,18 +782,101 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
 
         print(test_pred)
 
-        generate_shap_report(rf_model, "randomforest", dX, top_features, "randomforest")
+        shap_results$rf <- generate_shap_report(rf_model, "randomforest", dX, top_features, "randomforest")
     }
 
     # 1. Nomogram模型（逻辑回归）SHAP分析
     if (!is.null(nomogram_model)) {
-        generate_shap_report(nomogram_model, "nomogram", dX, top_features, "nomogram")
+        shap_results$nomogram <- generate_shap_report(nomogram_model, "nomogram", dX, top_features, "nomogram")
     }
 
     # 2. XGBoost模型SHAP分析
     if (!is.null(xgb_model)) {
-        generate_shap_report(xgb_model, "xgboost", dX, top_features, "xgboost")
+        shap_results$xgb <- generate_shap_report(xgb_model, "xgboost", dX, top_features, "xgboost")
     }
 
-    invisible(NULL);
+    # ==================== 新增：综合SHAP统计报告 ====================
+
+    cat("正在生成综合SHAP统计报告...\n")
+
+    # 创建综合比较表格
+    if (length(shap_results) > 0) {
+        # 为每个模型创建特征重要性排名
+        importance_rankings <- list()
+
+        for (model_name in names(shap_results)) {
+            if (!is.null(shap_results[[model_name]]$shap_stats)) {
+                stats <- shap_results[[model_name]]$shap_stats
+                importance_rankings[[model_name]] <- data.frame(
+                    feature_name = stats$feature_name,
+                    importance_rank = 1:nrow(stats),
+                    shap_abs_mean = stats$shap_abs_mean,
+                    model = model_name
+                )
+            }
+        }
+
+        # 合并所有模型的排名
+        if (length(importance_rankings) > 0) {
+            combined_importance <- do.call(rbind, importance_rankings)
+
+            # 保存综合报告
+            write.xlsx(combined_importance,
+                       file = file.path(shap_dir, "combined_shap_importance.xlsx"),
+                       rowNames = FALSE)
+
+            # 创建特征重要性对比图
+            pdf(file = file.path(shap_dir, "shap_importance_comparison.pdf"),
+                width = 12, height = 8)
+
+            # 选择前15个重要特征进行可视化
+            top_features_combined <- combined_importance %>%
+                group_by(feature_name) %>%
+                summarise(mean_importance = mean(shap_abs_mean)) %>%
+                arrange(-mean_importance) %>%
+                head(15) %>%
+                pull(feature_name)
+
+            comparison_data <- combined_importance %>%
+                filter(feature_name %in% top_features_combined)
+
+            p <- ggplot(comparison_data,
+                        aes(x = reorder(feature_name, shap_abs_mean),
+                            y = shap_abs_mean, fill = model)) +
+                geom_bar(stat = "identity", position = "dodge") +
+                coord_flip() +
+                labs(title = "SHAP特征重要性对比",
+                     x = "特征", y = "平均绝对SHAP值", fill = "模型") +
+                theme_minimal()
+
+            print(p)
+            dev.off()
+        }
+    }
+
+    # ==================== 新增：SHAP统计摘要报告 ====================
+
+    # 生成文本格式的统计摘要
+    sink(file = file.path(shap_dir, "shap_analysis_summary.txt"))
+    cat("SHAP分析统计摘要\n")
+    cat("生成时间:", Sys.time(), "\n")
+    cat("=", 50, "\n\n")
+
+    for (model_name in names(shap_results)) {
+        if (!is.null(shap_results[[model_name]]$shap_stats)) {
+            cat("模型:", model_name, "\n")
+            cat("特征数量:", nrow(shap_results[[model_name]]$shap_stats), "\n")
+            cat("SHAP值范围: [",
+                min(shap_results[[model_name]]$shap_stats$shap_min), ", ",
+                max(shap_results[[model_name]]$shap_stats$shap_max), "]\n")
+            cat("最重要特征:",
+                shap_results[[model_name]]$shap_stats$feature_name[1], "\n")
+            cat("平均绝对SHAP值:",
+                mean(shap_results[[model_name]]$shap_stats$shap_abs_mean), "\n")
+            cat("\n")
+        }
+    }
+    sink()
+
+    invisible(shap_results)
 }
