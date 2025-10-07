@@ -83,16 +83,16 @@
 #' This function implements comprehensive model evaluation using:
 #' \itemize{
 #'   \item \strong{ROC curve analysis:} Visualizes model performance across different 
-#'         classification thresholds using the pROC package [6](@ref)
+#'         classification thresholds using the pROC package 
 #'   \item \strong{Cross-validation:} Assesses model generalizability through resampling 
-#'         techniques to prevent overfitting [7](@ref)
+#'         techniques to prevent overfitting 
 #'   \item \strong{Performance metrics:} Calculates AUC, accuracy, sensitivity, 
-#'         specificity, F1 score, and other classification metrics [8](@ref)
+#'         specificity, F1 score, and other classification metrics 
 #' }
 #'
 #' @section Visualization Features:
 #' The function generates multiple visualization types supported by R's graphics
-#' capabilities [1,4](@ref):
+#' capabilities :
 #' \itemize{
 #'   \item \strong{ROC curves:} Individual and combined ROC plots for model comparison
 #'   \item \strong{Feature importance:} Bar plots showing variable significance across models
@@ -120,11 +120,11 @@
 #' @seealso
 #' Useful links for related packages and techniques:
 #' \itemize{
-#'   \item \code{\link[pROC]{roc}} for ROC curve analysis [6](@ref)
-#'   \item \code{\link[ggplot2]{ggplot}} for advanced plotting [1,4](@ref)
+#'   \item \code{\link[pROC]{roc}} for ROC curve analysis
+#'   \item \code{\link[ggplot2]{ggplot}} for advanced plotting 
 #'   \item \code{\link[rms]{nomogram}} for nomogram creation
-#'   \item \code{\link[caret]{train}} for model training and evaluation [8](@ref)
-#'   \item \code{\link[rsample]{vfold_cv}} for cross-validation implementations [7](@ref)
+#'   \item \code{\link[caret]{train}} for model training and evaluation 
+#'   \item \code{\link[rsample]{vfold_cv}} for cross-validation implementations 
 #' }
 #'
 #' @author Your Name <your.email@example.com>
@@ -405,7 +405,7 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
     if (!is.null(rf_model)) {
         cat("正在生成随机森林特征重要性...\n")
 
-        # 提取随机森林特征重要性[1,7](@ref)
+        # 提取随机森林特征重要性
         if (inherits(rf_model, "randomForest")) {
             # 对于randomForest包创建的模型
             rf_importance <- importance(rf_model)
@@ -421,7 +421,7 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
                 )
             }
         } else if (inherits(rf_model, "ranger")) {
-            # 对于ranger包创建的模型[7](@ref)
+            # 对于ranger包创建的模型
             rf_importance <- rf_model$variable.importance
             rf_imp_df <- data.frame(
                 Feature = names(rf_importance),
@@ -449,7 +449,7 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
         rf_imp_df <- rf_imp_df[order(-rf_imp_df$Importance), ]
         rf_imp_df <- rf_imp_df[!is.na(rf_imp_df$Importance), ]
 
-        # 绘制随机森林特征重要性图[6](@ref)
+        # 绘制随机森林特征重要性图
         pdf(file = file.path(features_dir, "rf_feature_importance.pdf"))
         p_rf <- ggplot(rf_imp_df, aes(x = reorder(Feature, Importance), y = Importance)) +
             geom_col(fill = "#FF6B6B") +
@@ -470,7 +470,7 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
     if (!is.null(xgb_model)) {
         cat("正在生成XGBoost特征重要性...\n")
 
-        # 提取XGBoost特征重要性[7](@ref)
+        # 提取XGBoost特征重要性
         tryCatch({
             if (inherits(xgb_model, "xgb.Booster")) {
                 # 使用xgboost包的功能提取重要性
@@ -542,7 +542,7 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
     }
 
     # ==================== 新增：组合特征重要性图 ====================
-    # 创建包含所有模型特征重要性的组合图[1](@ref)
+    # 创建包含所有模型特征重要性的组合图
     cat("正在生成组合特征重要性图...\n")
 
     # 准备数据
