@@ -529,7 +529,12 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
     if (exists("xgb_imp_df") && !all(is.na(xgb_imp_df$Importance))) {
         xgb_imp_df$Model <- "XGBoost"
         xgb_imp_df$Importance_Norm <- xgb_imp_df$Importance / max(xgb_imp_df$Importance)
-        all_imp_dfs$xgb <- xgb_imp_df
+        all_imp_dfs$xgb <- list(
+            Feature = xgb_imp_df$Feature,
+            Importance = xgb_imp_df$Importance,
+            Model = xgb_imp_df$Model,
+            Importance_Norm = xgb_imp_df$Importance_Norm
+        );
     }
 
     # 合并所有数据
