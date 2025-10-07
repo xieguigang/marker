@@ -67,6 +67,6 @@ plot_pca = function(df, dirsave) {
     # 6. 保存结果（可选）
     ggsave(file.path(dirsave, "PCA_plot.png"), width = 8, height = 6, dpi = 300);
 
-    writeLines(variance, con = file.path(dirsave,"PCA_importance.txt"));
+    writeLines(as.character( variance), con = file.path(dirsave,"PCA_importance.txt"));
     write.csv(pc_scores, con = file.path(dirsave,"PCA_scores.csv"));
 }
