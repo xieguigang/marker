@@ -51,10 +51,13 @@ run_lasso <- function(X, y, lambda = 0.01) {
 
             # 提取最优模型
             best_model <- glmnet(X, y, family = "binomial", alpha = 1, lambda = lambda)
-
             # 提取非零系数特征
             coefs <- coef(best_model, s = lambda)
-            selected_features <- rownames(coefs)[which(coefs != 0)][-1]  # 排除截距项
+
+            message("get coefs for each features:");
+            print(coefs);
+
+            selected_features <- rownames(coefs)[which(coefs != 0.0)][-1]  # 排除截距项
 
             list(
                 features = selected_features,
