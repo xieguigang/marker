@@ -55,6 +55,17 @@ marker = function(data, class, sel_features = NULL, training_size = 0.7, top_fea
     preprocessed <- preprocess_data(data[data$class %in% class,], labels = class);
     X <- preprocessed$X
     y <- preprocessed$y
+    data = as.data.frame(X);
+    data[,"class"] = as.character(y);
+    data = dataframe(data);
+
+    # check of the class labels
+    if (sum(data$class == class[1]) == 0) {
+        stop("missing of the CON(NC) class label inside your data: ", class[1]);
+    }
+    if (sum(data$class == class[2]) == 0) {
+        stop("missing of the Treatment class label inside your data: ", class[2]);
+    }
 
     message("result data files will be save at location:");
     message(save_dir);
@@ -72,7 +83,7 @@ marker = function(data, class, sel_features = NULL, training_size = 0.7, top_fea
 
     message("do we havee the selected features for run analysis?");
     message(length(sel_features)>0);
-    
+
     if (length(sel_features) == 0) {
         message("features will be evaluated based on multiple models.");
 
@@ -125,7 +136,7 @@ marker = function(data, class, sel_features = NULL, training_size = 0.7, top_fea
     write.csv(train, file = file.path(save_dir,"data","training.csv"));
     writeLines(as.character(train_y), con = file.path(save_dir,"data","training_labels.csv"));
     write.csv(test, file = file.path(save_dir,"data","test.csv"));
-    writeLines(as.character(test_y), con = file.path(save_dir,"data","test_labels.csv"));   
+    writeLines(as.character(test_y), con = file.path(save_dir,"data","test_labels.csv"));
 
     # 4. 模型集成
     ensemble_result <- ensemble_model(train, train_y, top_features, file.path(save_dir, "machine_learning"))
