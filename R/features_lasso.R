@@ -57,7 +57,11 @@ run_lasso <- function(X, y, lambda = 0.01) {
             message("get coefs for each features:");
             print(coefs);
 
-            selected_features <- rownames(coefs)[which(coefs != 0.0)][-1]  # 排除截距项
+            if (is(coefs, "dgCMatrix")) {
+                selected_features <- rownames(coefs)[which(as.numeric(coefs) != 0)][-1]  # 排除截距项
+            } else {
+                selected_features <- rownames(coefs)[which(coefs != 0.0)][-1]  # 排除截距项
+            }
 
             list(
                 features = selected_features,
