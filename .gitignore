@@ -424,3 +424,5 @@ test/aa55ac5e-7a48-45fd-9fb5-7e013805b247/annotations.txt
 test/aa55ac5e-7a48-45fd-9fb5-7e013805b247/barcodes.tsv
 test/aa55ac5e-7a48-45fd-9fb5-7e013805b247/features.tsv
 test/aa55ac5e-7a48-45fd-9fb5-7e013805b247.csv
+/test/demo/linears/Barplots
+/test/demo/linears/Individual_ROCs
