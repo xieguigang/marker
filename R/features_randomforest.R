@@ -48,12 +48,50 @@
 #'
 #' @importFrom randomForest randomForest
 #' @importFrom dplyr arrange desc
-run_random_forest <- function(X, y, ntree = 500) {
+run_random_forest <- function(X, y) {
     message("run random forest feature selection...");
-    
+
+    # 获取特征数量
+    n_features <- ncol(X)
+    message("Number of features detected: ", n_features)
+
+# 动态计算 mtry，并对高维数据设置上限
+              mtry_value <- round(sqrt(n_features))
+              mtry_value <- min(100, mtry_value) # 即使sqrt(n_features)很大，也限制在100以内
+              
+              # 自适应调整树的数量和节点大小
+              if(n_features > 1000) {
+                ntree_value <- 100  # 特征非常多时，减少树的数量
+                node_size <- 10     # 增大节点大小，简化树
+                max_nodes <- 50     # 限制最大节点数
+              } else if(n_features > 500) {
+                ntree_value <- 150
+                node_size <- 5
+                max_nodes <- 100
+              } else {
+                ntree_value <- ifelse(ntree_auto, 200, 500) # 特征少时可用更多树
+                node_size <- 1
+                max_nodes <- NULL
+              }
+
+message("Adaptive parameters - mtry: ", mtry_value, 
+                    ", ntree: ", ntree_value,
+                    ", node_size: ", node_size)
+
     result <- tryCatch(
         expr = {
-            rf_model <- randomForest(X, y, ntree = ntree, importance = TRUE)
+            # 2. 模型训练
+            rf_model <- randomForest::randomForest(
+              x = X, 
+              y = y,
+              ntree = ntree_value,
+              mtry = mtry_value,
+              nodesize = node_size,
+              maxnodes = max_nodes, # 可选参数，强力加速
+              importance = TRUE,    # 必须为TRUE才能计算重要性
+              do.trace = 50,       # 每50棵树显示一次进度，方便监控
+              keep.forest = FALSE   # 若只需特征重要性，可设为FALSE节省内存
+            )
 
             # 提取重要性排名
             importance_df <- data.frame(
