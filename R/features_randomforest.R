@@ -58,6 +58,7 @@ run_random_forest <- function(X, y) {
     # 动态计算 mtry，并对高维数据设置上限
     mtry_value <- round(sqrt(n_features))
     mtry_value <- min(100, mtry_value) # 即使sqrt(n_features)很大，也限制在100以内
+    ntree_auto = TRUE;
 
     # 自适应调整树的数量和节点大小
     if(n_features > 1000) {
