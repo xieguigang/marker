@@ -2,20 +2,20 @@
 #'
 #' This function conducts linear regression analysis for each metabolite in a metabolomics dataset,
 #' evaluating the relationship between metabolite concentration and treatment classification.
-#' It generates comprehensive performance metrics, ROC curves, and visualization plots 
+#' It generates comprehensive performance metrics, ROC curves, and visualization plots
 #' for each metabolite, facilitating biomarker discovery and analysis.
 #'
-#' @param data A data frame containing the metabolomics data. The dataset must include 
-#'   a column named 'class' containing the group labels as a factor, with subsequent 
-#'   columns representing metabolite concentrations. The 'class' column should contain 
+#' @param data A data frame containing the metabolomics data. The dataset must include
+#'   a column named 'class' containing the group labels as a factor, with subsequent
+#'   columns representing metabolite concentrations. The 'class' column should contain
 #'   exactly two levels corresponding to the CON and Treatment groups.
-#' @param CON Character string specifying the name of the control/reference group 
+#' @param CON Character string specifying the name of the control/reference group
 #'   in the 'class' column (e.g., "Control" or "Normal").
-#' @param Treatment Character string specifying the name of the treatment/experimental group 
+#' @param Treatment Character string specifying the name of the treatment/experimental group
 #'   in the 'class' column (e.g., "Case" or "Disease").
-#' @param save_dir Character string specifying the directory path where all output 
+#' @param save_dir Character string specifying the directory path where all output
 #'   files (results, plots) will be saved. The directory will be created if it doesn't exist.
-#' @param top_plots Integer specifying the number of top-performing metabolites 
+#' @param top_plots Integer specifying the number of top-performing metabolites
 #'   (ranked by AUC) for which individual plots will be generated. Default is 50.
 #'
 #' @return A data frame with one row per metabolite, sorted in descending order by AUC value.
@@ -46,25 +46,25 @@
 #'   \item Saves top 10 metabolites by AUC in a combined ROC plot
 #' }
 #'
-#' The function creates two subdirectories within \code{save_dir}: "Individual_ROCs" for 
-#' ROC curves and "Barplots" for concentration comparison plots. It also exports an Excel file 
+#' The function creates two subdirectories within \code{save_dir}: "Individual_ROCs" for
+#' ROC curves and "Barplots" for concentration comparison plots. It also exports an Excel file
 #' with complete results and displays top performers in the console.
 #'
 #' @examples
 #' \donttest{
 #' # Load example metabolomics data
 #' data <- read.csv("metabolite_data.csv")
-#' 
+#'
 #' # Ensure class column is factor with correct levels
 #' data$class <- as.factor(data$class)
-#' 
+#'
 #' # Create output directory
 #' output_dir <- "analysis_results"
-#' 
+#'
 #' # Run analysis comparing "Control" vs "Treatment" groups
-#' results <- single_linear(data, CON = "Control", Treatment = "Treatment", 
+#' results <- single_linear(data, CON = "Control", Treatment = "Treatment",
 #'                         save_dir = output_dir, top_plots = 20)
-#' 
+#'
 #' # View top 10 metabolites by AUC
 #' head(results, 10)
 #' }
@@ -86,7 +86,7 @@ single_linear = function(data, CON, Treatment, save_dir, top_plots = 50) {
     message(CON);
     message("class label for treatment type is:");
     message(Treatment);
-    
+
     # 初始化结果存储
     results_df <- data.frame(
         Metabolite = character(0),
@@ -94,6 +94,7 @@ single_linear = function(data, CON, Treatment, save_dir, top_plots = 50) {
         R2 = numeric(0),
         AUC = numeric(0),
         Accuracy = numeric(0),
+        Threshold = numeric(0),
         FPR = numeric(0),
         Sensitivity = numeric(0),
         Specificity = numeric(0),
@@ -106,7 +107,7 @@ single_linear = function(data, CON, Treatment, save_dir, top_plots = 50) {
     # 创建目录保存各种图表
     dir.create(file.path(save_dir, "Individual_ROCs"), showWarnings = FALSE)
     dir.create(file.path(save_dir, "Barplots"), showWarnings = FALSE)
-    
+
     # 初始化存储所有ROC对象的列表
     all_rocs <- list()
 
@@ -121,13 +122,21 @@ single_linear = function(data, CON, Treatment, save_dir, top_plots = 50) {
 
         # 预测概率
         predictions <- predict(model)
+        roc_obj = NULL;
+        auc_value = 0.0;
+        best_threshold = 1.0;
 
-        # 计算ROC和AUC
-        roc_obj <- roc(data$class, predictions, levels = c(CON, Treatment), direction = "<")
-        auc_value <- auc(roc_obj)
+        if (all(predictions == 0.0)) {
+            message("invalid model of ", metab_name);
+        } else {
+            # 计算ROC和AUC
+            roc_obj <- roc(data$class, predictions, levels = c(CON, Treatment), direction = "<")
+            auc_value <- auc(roc_obj)
 
-        # 计算最佳阈值和混淆矩阵
-        best_threshold <- coords(roc_obj, "best", ret = "threshold")$threshold
+            # 计算最佳阈值和混淆矩阵
+            best_threshold <- coords(roc_obj, "best", ret = "threshold")$threshold
+        }
+
         predicted_class <- ifelse(predictions > best_threshold, Treatment, CON)
 
         # 确保因子水平一致
@@ -173,6 +182,7 @@ single_linear = function(data, CON, Treatment, save_dir, top_plots = 50) {
             R2 = r2_value,
             AUC = auc_value,
             Accuracy = accuracy,
+            Threshold = best_threshold,
             FPR = fpr,
             Sensitivity = sensitivity,
             Specificity = specificity,
@@ -180,7 +190,7 @@ single_linear = function(data, CON, Treatment, save_dir, top_plots = 50) {
             log2FC = log2fc,
             pvalue = p_val
         ))
-        
+
         # 存储ROC对象供后续使用
         all_rocs[[metab_name]] <- list(
             roc = roc_obj,
@@ -196,21 +206,21 @@ single_linear = function(data, CON, Treatment, save_dir, top_plots = 50) {
 
     # 按AUC降序排序
     results_df <- results_df[order(results_df$AUC, decreasing = TRUE), ]
-    
+
     # 仅对AUC排名前top_plots的feature进行绘图
     top_metabolites <- head(results_df$Metabolite, top_plots)
-    
+
     # 绘制条形图和单个ROC图（仅前top_plots个）
     for (metab_name in top_metabolites) {
         roc_info <- all_rocs[[metab_name]]
-        
+
         # 创建条形图数据
         plot_data <- data.frame(
-            group = factor(c(rep(CON, length(roc_info$group1)), 
+            group = factor(c(rep(CON, length(roc_info$group1)),
                           rep(Treatment, length(roc_info$group2)))),
             value = c(roc_info$group1, roc_info$group2)
         )
-        
+
         # 创建条形图
         y_max <- max(plot_data$value) * 1.2
         p_bar <- ggplot(plot_data, aes(x = group, y = value, fill = group)) +
@@ -226,31 +236,31 @@ single_linear = function(data, CON, Treatment, save_dir, top_plots = 50) {
             labs(title = metab_name,
                  x = "Group",
                  y = "Concentration",
-                 subtitle = sprintf("log2FC = %.2f\nAUC = %.3f\n%s", 
+                 subtitle = sprintf("log2FC = %.2f\nAUC = %.3f\n%s",
                                    roc_info$log2fc, roc_info$auc, roc_info$model_eq)) +
             theme_minimal() +
             theme(legend.position = "none")
-        
+
         # 保存条形图
-        ggsave(file.path(save_dir, "Barplots", paste0(metab_name, "_barplot.pdf")), 
+        ggsave(file.path(save_dir, "Barplots", paste0(metab_name, "_barplot.pdf")),
                p_bar, width = 6, height = 5)
-        
+
         # 生成单个ROC图
         p_roc <- ggroc(roc_info$roc, legacy.axes = TRUE) +
             geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray") +
             labs(title = paste0(metab_name, " (AUC = ", round(roc_info$auc, 3), ")"),
                  x = "False Positive Rate", y = "True Positive Rate") +
             theme_minimal()
-        
-        ggsave(file.path(save_dir, "Individual_ROCs", paste0(metab_name, "_ROC.pdf")), 
+
+        ggsave(file.path(save_dir, "Individual_ROCs", paste0(metab_name, "_ROC.pdf")),
                p_roc, width = 6, height = 4)
     }
-    
+
     # 绘制前10个AUC最好的feature的ROC叠加图
     top10_metabolites <- head(results_df$Metabolite, 10)
     top10_rocs <- lapply(top10_metabolites, function(name) all_rocs[[name]]$roc)
     names(top10_rocs) <- top10_metabolites
-    
+
     if (length(top10_rocs) > 0) {
         p_combined <- ggroc(top10_rocs, legacy.axes = TRUE) +
             geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray") +
@@ -269,11 +279,11 @@ single_linear = function(data, CON, Treatment, save_dir, top_plots = 50) {
 
     # 使用openxlsx包导出结果到Excel
     write.xlsx(results_df, file.path(save_dir, "Metabolite_Regression_Results.xlsx"))
-    
+
     message("分析完成！结果已保存到: ", save_dir)
     message("总计分析了 ", nrow(results_df), " 个代谢物")
     message("绘制了前 ", top_plots, " 个代谢物的图表")
     message("生成了前10个AUC最佳代谢物的ROC叠加图")
-    
+
     invisible(NULL);
 }

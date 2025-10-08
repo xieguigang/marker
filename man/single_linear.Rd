@@ -7,21 +7,21 @@
 single_linear(data, CON, Treatment, save_dir, top_plots = 50)
 }
 \arguments{
-\item{data}{A data frame containing the metabolomics data. The dataset must include 
-a column named 'class' containing the group labels as a factor, with subsequent 
-columns representing metabolite concentrations. The 'class' column should contain 
+\item{data}{A data frame containing the metabolomics data. The dataset must include
+a column named 'class' containing the group labels as a factor, with subsequent
+columns representing metabolite concentrations. The 'class' column should contain
 exactly two levels corresponding to the CON and Treatment groups.}
 
-\item{CON}{Character string specifying the name of the control/reference group 
+\item{CON}{Character string specifying the name of the control/reference group
 in the 'class' column (e.g., "Control" or "Normal").}
 
-\item{Treatment}{Character string specifying the name of the treatment/experimental group 
+\item{Treatment}{Character string specifying the name of the treatment/experimental group
 in the 'class' column (e.g., "Case" or "Disease").}
 
-\item{save_dir}{Character string specifying the directory path where all output 
+\item{save_dir}{Character string specifying the directory path where all output
 files (results, plots) will be saved. The directory will be created if it doesn't exist.}
 
-\item{top_plots}{Integer specifying the number of top-performing metabolites 
+\item{top_plots}{Integer specifying the number of top-performing metabolites
 (ranked by AUC) for which individual plots will be generated. Default is 50.}
 }
 \value{
@@ -44,7 +44,7 @@ A data frame with one row per metabolite, sorted in descending order by AUC valu
 \description{
 This function conducts linear regression analysis for each metabolite in a metabolomics dataset,
 evaluating the relationship between metabolite concentration and treatment classification.
-It generates comprehensive performance metrics, ROC curves, and visualization plots 
+It generates comprehensive performance metrics, ROC curves, and visualization plots
 for each metabolite, facilitating biomarker discovery and analysis.
 }
 \details{
@@ -59,8 +59,8 @@ This function performs comprehensive analysis for each metabolite in the dataset
   \item Saves top 10 metabolites by AUC in a combined ROC plot
 }
 
-The function creates two subdirectories within \code{save_dir}: "Individual_ROCs" for 
-ROC curves and "Barplots" for concentration comparison plots. It also exports an Excel file 
+The function creates two subdirectories within \code{save_dir}: "Individual_ROCs" for
+ROC curves and "Barplots" for concentration comparison plots. It also exports an Excel file
 with complete results and displays top performers in the console.
 }
 \examples{
@@ -75,7 +75,7 @@ data$class <- as.factor(data$class)
 output_dir <- "analysis_results"
 
 # Run analysis comparing "Control" vs "Treatment" groups
-results <- single_linear(data, CON = "Control", Treatment = "Treatment", 
+results <- single_linear(data, CON = "Control", Treatment = "Treatment",
                         save_dir = output_dir, top_plots = 20)
 
 # View top 10 metabolites by AUC
