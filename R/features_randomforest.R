@@ -49,6 +49,8 @@
 #' @importFrom randomForest randomForest
 #' @importFrom dplyr arrange desc
 run_random_forest <- function(X, y, ntree = 500) {
+    message("run random forest feature selection...");
+    
     result <- tryCatch(
         expr = {
             rf_model <- randomForest(X, y, ntree = ntree, importance = TRUE)

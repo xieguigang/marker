@@ -77,6 +77,8 @@
 #'
 #' @export
 run_svm_rfe <- function(X, y, n_features = 5, metric = "Accuracy", kernel = "radial",...) {
+    message("run svm feature selection...");
+    
     result <- tryCatch(
         expr = {
             # 核方法映射表

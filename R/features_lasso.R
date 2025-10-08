@@ -44,6 +44,8 @@
 #' * The `glmnet` package documentation: \url{https://glmnet.stanford.edu/}
 #' * Useful resources on LASSO regression: \url{https://web.stanford.edu/~hastie/Papers/glmnet.pdf}
 run_lasso <- function(X, y, lambda = 0.01) {
+    message("run lasso feature selection...");
+    
     result <- tryCatch(
         expr = {
             # 交叉验证确定最优lambda
