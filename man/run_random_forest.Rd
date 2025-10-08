@@ -4,15 +4,15 @@
 \alias{run_random_forest}
 \title{Run Random Forest for Feature Importance Analysis}
 \usage{
-run_random_forest(X, y, ntree = 500)
+run_random_forest(X, y)
 }
 \arguments{
-\item{X}{A numeric matrix or data frame containing the predictor variables (features). 
+\item{X}{A numeric matrix or data frame containing the predictor variables (features).
 Rows represent observations/samples, and columns represent features. This is the fixed effects matrix.}
 
 \item{y}{A numeric vector representing the response (output) variable. Its length must equal the number of rows in `X`.}
 
-\item{ntree}{An integer specifying the number of trees to grow in the random forest. A larger number increases 
+\item{ntree}{An integer specifying the number of trees to grow in the random forest. A larger number increases
 stability but also computation time. The default value is 500.}
 }
 \value{
