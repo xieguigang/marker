@@ -116,11 +116,11 @@ run_svm_rfe <- function(X, y, n_features = 5, metric = "Accuracy", kernel = "rad
             # 2. 自适应设置特征子集大小（sizes）
             if (halve_step && n_total > 100) {
                 # 使用halve.above策略：特征数>100时每次消除一半特征[1,7](@ref)
-                sizes <- unique(round(2^(seq(0, log2(n_features), length.out = max_sizes)))
-                                } else {
-                                    # 线性步长：适用于小数据集
-                                    sizes <- unique(round(seq(1, n_features, length.out = max_sizes)))
-                                }
+                sizes <- unique(round(2^(seq(0, log2(n_features), length.out = max_sizes))));
+            } else {
+                # 线性步长：适用于小数据集
+                sizes <- unique(round(seq(1, n_features, length.out = max_sizes)))
+            }
             sizes <- sort(sizes[sizes <= n_features & sizes >= 1])  # 确保有效性
 
             # 3. 并行计算设置[6,7](@ref)
@@ -177,12 +177,12 @@ run_svm_rfe <- function(X, y, n_features = 5, metric = "Accuracy", kernel = "rad
                 optimal_size = rfe_results$optsize,
                 performance = rfe_results$results
             )
-            },
+        },
         error = function(e) {
             message("SVM-RFE failed: ", conditionMessage(e))
             return(NULL)
         }
-        );
+    );
 
-                return(result)
-                }
+    return(result)
+}

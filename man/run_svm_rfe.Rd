@@ -7,47 +7,47 @@
 run_svm_rfe(X, y, n_features = 5, metric = "Accuracy", kernel = "radial", ...)
 }
 \arguments{
-\item{X}{A numeric matrix or data frame where rows represent samples and columns represent 
+\item{X}{A numeric matrix or data frame where rows represent samples and columns represent
 features/genes. This is the predictor variable matrix.}
 
-\item{y}{A factor or numeric vector containing the outcome/target variable corresponding 
+\item{y}{A factor or numeric vector containing the outcome/target variable corresponding
 to the samples in `X`.}
 
-\item{n_features}{An integer specifying the maximum number of top features to select. 
+\item{n_features}{An integer specifying the maximum number of top features to select.
 The function will evaluate feature subsets from 1 to `n_features`. Default is 5.}
 
-\item{metric}{A character string indicating the performance metric to use for evaluating 
-feature subsets. Common metrics include "Accuracy" for classification or "RMSE" for 
+\item{metric}{A character string indicating the performance metric to use for evaluating
+feature subsets. Common metrics include "Accuracy" for classification or "RMSE" for
 regression. Default is "Accuracy".}
 
-\item{kernel}{A character string specifying the SVM kernel type. Must be one of: 
-"radial" (default), "linear", "polynomial", or "sigmoid". Each kernel has different 
+\item{kernel}{A character string specifying the SVM kernel type. Must be one of:
+"radial" (default), "linear", "polynomial", or "sigmoid". Each kernel has different
 characteristics for handling non-linear decision boundaries.}
 
-\item{...}{Additional arguments passed to the SVM model, allowing customization of 
-parameters such as `cost`, `gamma`, `degree`, etc. These will override default 
+\item{...}{Additional arguments passed to the SVM model, allowing customization of
+parameters such as `cost`, `gamma`, `degree`, etc. These will override default
 kernel parameters.}
 }
 \value{
 A list containing the following components:
   \itemize{
-    \item \code{features} - A character vector of the names of the selected features 
+    \item \code{features} - A character vector of the names of the selected features
       (if `X` has column names) or indices of the selected features.
     \item \code{model} - The final SVM model trained on the selected features.
-    \item \code{error} - A vector of performance metric values (e.g., RMSE) from the 
+    \item \code{error} - A vector of performance metric values (e.g., RMSE) from the
       resampling process for each feature subset size.
   }
 }
 \description{
 Performs feature selection using Support Vector Machine Recursive Feature Elimination (SVM-RFE).
-This function implements a wrapper feature selection method that recursively removes the least 
+This function implements a wrapper feature selection method that recursively removes the least
 important features based on SVM weights, ultimately selecting the optimal feature subset.
 }
 \details{
-This function utilizes the \code{caret} package's \code{rfe} function to implement 
+This function utilizes the \code{caret} package's \code{rfe} function to implement
 SVM-RFE. The algorithm works as follows:
 \enumerate{
-  \item Train an SVM model on all features and rank features by their importance 
+  \item Train an SVM model on all features and rank features by their importance
     (based on weight magnitude in linear SVM or variable importance for non-linear kernels).
   \item Remove the least important feature(s).
   \item Repeat the process recursively on the remaining feature set.
@@ -55,7 +55,7 @@ SVM-RFE. The algorithm works as follows:
   \item Select the feature subset that yields optimal performance based on the specified metric.
 }
 
-The function includes predefined parameter templates for different SVM kernels and 
+The function includes predefined parameter templates for different SVM kernels and
 uses 10-fold cross-validation by default for robust feature evaluation.
 }
 \examples{
@@ -81,7 +81,7 @@ plot(result$model)
 }
 \references{
 For more information on SVM-RFE, see:
-Guyon, I., Weston, J., Barnhill, S., & Vapnik, V. (2002). Gene selection for cancer 
+Guyon, I., Weston, J., Barnhill, S., & Vapnik, V. (2002). Gene selection for cancer
 classification using support vector machines. Machine Learning, 46(1-3), 389-422.
 }
 \seealso{
