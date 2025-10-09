@@ -2,65 +2,65 @@
 #' SVM-RFE Feature Selection
 #'
 #' Performs feature selection using Support Vector Machine Recursive Feature Elimination (SVM-RFE).
-#' This function implements a wrapper feature selection method that recursively removes the least 
+#' This function implements a wrapper feature selection method that recursively removes the least
 #' important features based on SVM weights, ultimately selecting the optimal feature subset.
 #'
-#' @param X A numeric matrix or data frame where rows represent samples and columns represent 
+#' @param X A numeric matrix or data frame where rows represent samples and columns represent
 #'   features/genes. This is the predictor variable matrix.
-#' @param y A factor or numeric vector containing the outcome/target variable corresponding 
+#' @param y A factor or numeric vector containing the outcome/target variable corresponding
 #'   to the samples in `X`.
-#' @param n_features An integer specifying the maximum number of top features to select. 
+#' @param n_features An integer specifying the maximum number of top features to select.
 #'   The function will evaluate feature subsets from 1 to `n_features`. Default is 5.
-#' @param metric A character string indicating the performance metric to use for evaluating 
-#'   feature subsets. Common metrics include "Accuracy" for classification or "RMSE" for 
+#' @param metric A character string indicating the performance metric to use for evaluating
+#'   feature subsets. Common metrics include "Accuracy" for classification or "RMSE" for
 #'   regression. Default is "Accuracy".
-#' @param kernel A character string specifying the SVM kernel type. Must be one of: 
-#'   "radial" (default), "linear", "polynomial", or "sigmoid". Each kernel has different 
+#' @param kernel A character string specifying the SVM kernel type. Must be one of:
+#'   "radial" (default), "linear", "polynomial", or "sigmoid". Each kernel has different
 #'   characteristics for handling non-linear decision boundaries.
-#' @param ... Additional arguments passed to the SVM model, allowing customization of 
-#'   parameters such as `cost`, `gamma`, `degree`, etc. These will override default 
+#' @param ... Additional arguments passed to the SVM model, allowing customization of
+#'   parameters such as `cost`, `gamma`, `degree`, etc. These will override default
 #'   kernel parameters.
 #'
 #' @return A list containing the following components:
 #'   \itemize{
-#'     \item \code{features} - A character vector of the names of the selected features 
+#'     \item \code{features} - A character vector of the names of the selected features
 #'       (if `X` has column names) or indices of the selected features.
 #'     \item \code{model} - The final SVM model trained on the selected features.
-#'     \item \code{error} - A vector of performance metric values (e.g., RMSE) from the 
+#'     \item \code{error} - A vector of performance metric values (e.g., RMSE) from the
 #'       resampling process for each feature subset size.
 #'   }
 #'
 #' @details
-#' This function utilizes the \code{caret} package's \code{rfe} function to implement 
+#' This function utilizes the \code{caret} package's \code{rfe} function to implement
 #' SVM-RFE. The algorithm works as follows:
 #' \enumerate{
-#'   \item Train an SVM model on all features and rank features by their importance 
+#'   \item Train an SVM model on all features and rank features by their importance
 #'     (based on weight magnitude in linear SVM or variable importance for non-linear kernels).
 #'   \item Remove the least important feature(s).
 #'   \item Repeat the process recursively on the remaining feature set.
 #'   \item Evaluate model performance at each step using cross-validation.
 #'   \item Select the feature subset that yields optimal performance based on the specified metric.
 #' }
-#' 
-#' The function includes predefined parameter templates for different SVM kernels and 
+#'
+#' The function includes predefined parameter templates for different SVM kernels and
 #' uses 10-fold cross-validation by default for robust feature evaluation.
 #'
 #' @examples
 #' \donttest{
 #' # Load required library
 #' library(caret)
-#' 
+#'
 #' # Example with iris dataset (classification)
 #' data(iris)
 #' X <- iris[, 1:4]  # Feature matrix
 #' y <- iris[, 5]    # Target variable
-#' 
+#'
 #' # Perform SVM-RFE feature selection with radial kernel
 #' result <- run_svm_rfe(X, y, n_features = 3, kernel = "radial")
-#' 
+#'
 #' # Print selected features
 #' print(result$features)
-#' 
+#'
 #' # Plot feature selection results (if available)
 #' plot(result$model)
 #' }
@@ -72,13 +72,13 @@
 #'
 #' @references
 #' For more information on SVM-RFE, see:
-#' Guyon, I., Weston, J., Barnhill, S., & Vapnik, V. (2002). Gene selection for cancer 
+#' Guyon, I., Weston, J., Barnhill, S., & Vapnik, V. (2002). Gene selection for cancer
 #' classification using support vector machines. Machine Learning, 46(1-3), 389-422.
 #'
 #' @export
 run_svm_rfe <- function(X, y, n_features = 5, metric = "Accuracy", kernel = "radial",...) {
     message("Starting SVM-RFE feature selection...")
-    
+
     # 加载必要包（静默加载）
     suppressMessages({
         if (!require("caret", quietly = TRUE)) install.packages("caret")
@@ -87,11 +87,11 @@ run_svm_rfe <- function(X, y, n_features = 5, metric = "Accuracy", kernel = "rad
         library(caret)
         library(doParallel)
     })
-    
+
     result <- tryCatch(
         expr = {
             n_total <- ncol(X)  # 总特征数
-            
+
             # 1. 自适应参数调整基于特征数量
             if (n_total > 5000) {
                 # 极大数据集：激进优化
@@ -112,22 +112,22 @@ run_svm_rfe <- function(X, y, n_features = 5, metric = "Accuracy", kernel = "rad
                 halve_step <- FALSE
                 tune_len <- 5
             }
-            
+
             # 2. 自适应设置特征子集大小（sizes）
             if (halve_step && n_total > 100) {
                 # 使用halve.above策略：特征数>100时每次消除一半特征[1,7](@ref)
                 sizes <- unique(round(2^(seq(0, log2(n_features), length.out = max_sizes)))
-            } else {
-                # 线性步长：适用于小数据集
-                sizes <- unique(round(seq(1, n_features, length.out = max_sizes)))
-            }
+                                } else {
+                                    # 线性步长：适用于小数据集
+                                    sizes <- unique(round(seq(1, n_features, length.out = max_sizes)))
+                                }
             sizes <- sort(sizes[sizes <= n_features & sizes >= 1])  # 确保有效性
-            
+
             # 3. 并行计算设置[6,7](@ref)
             cl <- makeCluster(detectCores() - 1)
             registerDoParallel(cl)
             on.exit(stopCluster(cl))  # 确保退出时关闭集群
-            
+
             # 核方法映射与参数设置（保持原逻辑）
             method_map <- list(
                 radial = "svmRadial",
@@ -143,12 +143,12 @@ run_svm_rfe <- function(X, y, n_features = 5, metric = "Accuracy", kernel = "rad
             )
             svm_params <- modifyList(kernel_params[[kernel]], list(...))
             tuneGrid <- switch(kernel,
-                "radial" = expand.grid(C = svm_params$cost, sigma = svm_params$gamma),
-                "linear" = expand.grid(C = svm_params$cost),
-                "polynomial" = expand.grid(C = svm_params$cost, degree = svm_params$degree, scale = svm_params$scale),
-                "sigmoid" = expand.grid(C = svm_params$cost, sigma = svm_params$gamma, coef0 = svm_params$coef0)
+                               "radial" = expand.grid(C = svm_params$cost, sigma = svm_params$gamma),
+                               "linear" = expand.grid(C = svm_params$cost),
+                               "polynomial" = expand.grid(C = svm_params$cost, degree = svm_params$degree, scale = svm_params$scale),
+                               "sigmoid" = expand.grid(C = svm_params$cost, sigma = svm_params$gamma, coef0 = svm_params$coef0)
             )
-            
+
             # 4. 配置递归特征消除控制参数
             ctrl <- rfeControl(
                 functions = caretFuncs,
@@ -158,7 +158,7 @@ run_svm_rfe <- function(X, y, n_features = 5, metric = "Accuracy", kernel = "rad
                 allowParallel = TRUE,         # 启用并行
                 returnResamp = "final"
             )
-            
+
             # 5. 执行SVM-RFE
             rfe_results <- rfe(
                 X, y,
@@ -170,19 +170,19 @@ run_svm_rfe <- function(X, y, n_features = 5, metric = "Accuracy", kernel = "rad
                 preProcess = c("center", "scale"),
                 importance = TRUE
             )
-            
+
             list(
                 features = predictors(rfe_results),
                 model = toString(rfe_results$fit),
                 optimal_size = rfe_results$optsize,
                 performance = rfe_results$results
             )
-        },
+            },
         error = function(e) {
             message("SVM-RFE failed: ", conditionMessage(e))
             return(NULL)
         }
-    );
+        );
 
-    return(result)
-}
+                return(result)
+                }
