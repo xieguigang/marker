@@ -77,72 +77,112 @@
 #'
 #' @export
 run_svm_rfe <- function(X, y, n_features = 5, metric = "Accuracy", kernel = "radial",...) {
-    message("run svm feature selection...");
+    message("Starting SVM-RFE feature selection...")
+    
+    # 加载必要包（静默加载）
+    suppressMessages({
+        if (!require("caret", quietly = TRUE)) install.packages("caret")
+        if (!require("e1071", quietly = TRUE)) install.packages("e1071")
+        if (!require("doParallel", quietly = TRUE)) install.packages("doParallel")
+        library(caret)
+        library(doParallel)
+    })
     
     result <- tryCatch(
         expr = {
-            # 核方法映射表
+            n_total <- ncol(X)  # 总特征数
+            
+            # 1. 自适应参数调整基于特征数量
+            if (n_total > 5000) {
+                # 极大数据集：激进优化
+                max_sizes <- 20                    # 仅测试20个特征子集大小
+                cv_number <- 3                     # 3折交叉验证
+                halve_step <- TRUE                 # 启用大步长消除
+                tune_len <- 3                      # 减少参数调优组合
+            } else if (n_total > 1000) {
+                # 大数据集：中等优化
+                max_sizes <- 30
+                cv_number <- 5
+                halve_step <- TRUE
+                tune_len <- 5
+            } else {
+                # 小数据集：保持原样
+                max_sizes <- min(n_features, 50)   # 最多50个点
+                cv_number <- 10
+                halve_step <- FALSE
+                tune_len <- 5
+            }
+            
+            # 2. 自适应设置特征子集大小（sizes）
+            if (halve_step && n_total > 100) {
+                # 使用halve.above策略：特征数>100时每次消除一半特征[1,7](@ref)
+                sizes <- unique(round(2^(seq(0, log2(n_features), length.out = max_sizes)))
+            } else {
+                # 线性步长：适用于小数据集
+                sizes <- unique(round(seq(1, n_features, length.out = max_sizes)))
+            }
+            sizes <- sort(sizes[sizes <= n_features & sizes >= 1])  # 确保有效性
+            
+            # 3. 并行计算设置[6,7](@ref)
+            cl <- makeCluster(detectCores() - 1)
+            registerDoParallel(cl)
+            on.exit(stopCluster(cl))  # 确保退出时关闭集群
+            
+            # 核方法映射与参数设置（保持原逻辑）
             method_map <- list(
                 radial = "svmRadial",
                 linear = "svmLinear",
                 polynomial = "svmPoly",
                 sigmoid = "svmSigmoid"
             )
-
-            # 参数模板（扩展默认值）
             kernel_params <- list(
-                radial = list(gamma = 1/sqrt(ncol(X)), cost = 1),
+                radial = list(gamma = 1/sqrt(n_total), cost = 1),
                 linear = list(cost = 10),
                 polynomial = list(degree = 3, scale = TRUE, coef0 = 0, cost = 1),
-                sigmoid = list(gamma = 1/sqrt(ncol(X)), coef0 = 0, cost = 1)
+                sigmoid = list(gamma = 1/sqrt(n_total), coef0 = 0, cost = 1)
             )
-
-            # 参数合并与验证
             svm_params <- modifyList(kernel_params[[kernel]], list(...))
-
-            # 生成调参网格
             tuneGrid <- switch(kernel,
-                            "radial" = expand.grid(C = svm_params$cost, sigma = svm_params$gamma),
-                            "linear" = expand.grid(C = svm_params$cost),
-                            "polynomial" = expand.grid(C = svm_params$cost, degree = svm_params$degree, scale = svm_params$scale),
-                            "sigmoid" = expand.grid(C = svm_params$cost, sigma = svm_params$gamma, coef0 = svm_params$coef0)
+                "radial" = expand.grid(C = svm_params$cost, sigma = svm_params$gamma),
+                "linear" = expand.grid(C = svm_params$cost),
+                "polynomial" = expand.grid(C = svm_params$cost, degree = svm_params$degree, scale = svm_params$scale),
+                "sigmoid" = expand.grid(C = svm_params$cost, sigma = svm_params$gamma, coef0 = svm_params$coef0)
             )
-
-            # 设置特征筛选控制参数
+            
+            # 4. 配置递归特征消除控制参数
             ctrl <- rfeControl(
                 functions = caretFuncs,
                 method = "cv",
-                number = 10,
+                number = cv_number,           # 自适应交叉验证折数
                 verbose = FALSE,
-                returnResamp = "all",
-                # 关键参数：强制遍历所有特征数量
-                saveDetails = TRUE
+                allowParallel = TRUE,         # 启用并行
+                returnResamp = "final"
             )
-
-            # 定义特征筛选过程
+            
+            # 5. 执行SVM-RFE
             rfe_results <- rfe(
                 X, y,
-                sizes = 1:n_features,
+                sizes = sizes,                # 自适应特征子集大小
                 rfeControl = ctrl,
                 method = method_map[[kernel]],
                 metric = metric,
-                tuneLength = 5,
-                tuneGrid = tuneGrid,
+                tuneGrid = tuneGrid,          # 固定参数网格（避免调优开销）
                 preProcess = c("center", "scale"),
                 importance = TRUE
             )
-
+            
             list(
                 features = predictors(rfe_results),
-                model = toString( rfe_results$fit),
-                error = rfe_results$resample$RMSE
+                model = toString(rfe_results$fit),
+                optimal_size = rfe_results$optsize,
+                performance = rfe_results$results
             )
         },
         error = function(e) {
-            message("svm feature selection error: ", conditionMessage(e));
-            return(NULL) # 出错时返回NULL
+            message("SVM-RFE failed: ", conditionMessage(e))
+            return(NULL)
         }
-    )
+    );
 
-    return(result);
+    return(result)
 }
