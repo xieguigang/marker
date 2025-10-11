@@ -39,18 +39,18 @@
 #'
 #' @references
 #' For more information on the limma package and its methods, see:
-#' - Smyth, G. K. (2004). Linear models and empirical bayes methods for assessing differential expression in microarray experiments. *Statistical Applications in Genetics and Molecular Biology*, 3(1), Article 3. 
-#' - Ritchie, M. E., Phipson, B., Wu, D., Hu, Y., Law, C. W., Shi, W., & Smyth, G. K. (2015). limma powers differential expression analyses for RNA-sequencing and microarray studies. *Nucleic Acids Research*, 43(7), e47. 
+#' - Smyth, G. K. (2004). Linear models and empirical bayes methods for assessing differential expression in microarray experiments. *Statistical Applications in Genetics and Molecular Biology*, 3(1), Article 3.
+#' - Ritchie, M. E., Phipson, B., Wu, D., Hu, Y., Law, C. W., Shi, W., & Smyth, G. K. (2015). limma powers differential expression analyses for RNA-sequencing and microarray studies. *Nucleic Acids Research*, 43(7), e47.
 #'
 #' @seealso
 #' [`limma::lmFit()`], [`limma::eBayes()`], [`limma::topTable()`], [`limma::makeContrasts()`]
 #'
 #' @export
-limma_filter = function(data, CON = "NC", treatment = "treatment", top = 2000, 
+limma_filter = function(data, CON = "NC", treatment = "treatment", top = 2000,
                        adj.P.Val = 0.05, logFC = 1) {
     library(limma)
     library(dplyr)
-    
+
     # 1. 检查数据方向并转置（如果行是样本，列是基因）
     # 假设输入数据行为样本，列为基因，需要转置为limma标准格式
     if("class" %in% colnames(data)) {
@@ -66,48 +66,51 @@ limma_filter = function(data, CON = "NC", treatment = "treatment", top = 2000,
     } else {
         stop("数据框中必须包含名为'class'的分组列")
     }
-    
+
     # 2. 过滤样本，只保留CON和treatment组的样本
     keep_samples <- group_info %in% c(CON, treatment)
     expr_matrix <- expr_matrix[, keep_samples]
     group <- factor(group_info[keep_samples], levels = c(CON, treatment))
-    
+
     # 3. 构建设计矩阵
     design <- model.matrix(~0 + group)
     colnames(design) <- levels(group)
-    
+
+    message("进行limma差异筛选：");
+    print(head(design))
+
     # 4. 构建对比矩阵
     contrast_formula <- paste0(treatment, " - ", CON)
     contrast.matrix <- makeContrasts(contrasts = contrast_formula, levels = design)
-    
+
     # 5. 拟合线性模型
     fit <- lmFit(expr_matrix, design)
     fit2 <- contrasts.fit(fit, contrast.matrix)
     fit2 <- eBayes(fit2)
-    
+
     # 6. 提取所有基因结果
     all_results <- topTable(fit2, coef = 1, number = Inf, adjust.method = "BH")
-    
+
     # 7. 筛选显著差异基因
     # 首先按调整后P值排序，然后应用阈值筛选
     sig_genes <- all_results %>%
-        arrange(adj.P.Val) %>%
-        filter(adj.P.Val < adj.P.Val & abs(logFC) > logFC)
-    
+        arrange(adj.P.Val); # %>%
+        # filter(adj.P.Val < adj.P.Val & abs(logFC) > logFC)
+
     # 8. 如果显著基因数量多于top参数，取前top个
     if(nrow(sig_genes) > top) {
         top_genes <- sig_genes[1:top, ]
     } else {
         top_genes <- sig_genes
     }
-    
+
     # 9. 结果摘要
     cat("差异分析结果摘要:\n")
     cat("对比组:", contrast_formula, "\n")
     cat("总基因数:", nrow(all_results), "\n")
     cat("显著差异基因数 (adj.P.Val <", adj.P.Val, "& |logFC| >", logFC, "):", nrow(sig_genes), "\n")
     cat("返回基因数:", nrow(top_genes), "\n")
-    
+
     print(head(top_genes));
 
     return(top_genes)
