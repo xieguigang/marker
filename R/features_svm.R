@@ -115,7 +115,7 @@ run_svm_rfe <- function(X, y, n_features = 5, metric = "Accuracy", kernel = "rad
 
             # 2. 自适应设置特征子集大小（sizes）
             if (halve_step && n_total > 100) {
-                # 使用halve.above策略：特征数>100时每次消除一半特征[1,7](@ref)
+                # 使用halve.above策略：特征数>100时每次消除一半特征
                 sizes <- unique(round(2^(seq(0, log2(n_features), length.out = max_sizes))));
             } else {
                 # 线性步长：适用于小数据集
@@ -123,7 +123,7 @@ run_svm_rfe <- function(X, y, n_features = 5, metric = "Accuracy", kernel = "rad
             }
             sizes <- sort(sizes[sizes <= n_features & sizes >= 1])  # 确保有效性
 
-            # 3. 并行计算设置[6,7](@ref)
+            # 3. 并行计算设置
             cl <- makeCluster(detectCores() - 1)
             registerDoParallel(cl)
             on.exit(stopCluster(cl))  # 确保退出时关闭集群
