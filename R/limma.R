@@ -108,5 +108,7 @@ limma_filter = function(data, CON = "NC", treatment = "treatment", top = 2000,
     cat("显著差异基因数 (adj.P.Val <", adj.P.Val, "& |logFC| >", logFC, "):", nrow(sig_genes), "\n")
     cat("返回基因数:", nrow(top_genes), "\n")
     
+    print(head(top_genes));
+
     return(top_genes)
 }
