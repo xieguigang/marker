@@ -52,17 +52,31 @@ preprocess_data <- function(data, remove_na = TRUE, normalize = TRUE, labels = c
         filter(!is.na(class));
 
     colnames(data_clean) <- trimws(colnames(data_clean));
+    constants = NULL;
 
     for(name in colnames(data_clean)) {
         if (name != "class") {
             v <- as.numeric(data_clean[,name]);
             v[is.na(v)] <- mean(v[!is.na(v)])/2;
 
+            if (var(v) <= .Machine$double.eps) {
+                constants = c(constants, name);
+            } 
+
             if(normalize) {
                 v = v / max(v);
             }
 
             data_clean[,name] = v;
+        }
+    }
+
+    if (any(constants)) {
+        print("find constant value columns:");
+        print(constants);
+
+        for(name in constants) {
+            data_clean[,name] = NULL;
         }
     }
 
