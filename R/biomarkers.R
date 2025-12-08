@@ -137,6 +137,8 @@ marker = function(data, class, sel_features = NULL, training_size = 0.7, top_fea
     writeLines(as.character(train_y), con = file.path(save_dir,"data","training_labels.csv"));
     write.csv(test, file = file.path(save_dir,"data","test.csv"));
     writeLines(as.character(test_y), con = file.path(save_dir,"data","test_labels.csv"));
+    writeLines(top_features, con = file.path(save_dir,"data", "features.txt"));
+    write.csv(X[, top_features], file = file.path(save_dir,"data","features.csv"));
 
     # 4. 模型集成
     ensemble_result <- ensemble_model(train, train_y, top_features, file.path(save_dir, "machine_learning"))
