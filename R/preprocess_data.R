@@ -71,7 +71,7 @@ preprocess_data <- function(data, remove_na = TRUE, normalize = TRUE, labels = c
         }
     }
 
-    if (any(constants)) {
+    if (length(constants) > 0) {
         print("find constant value columns:");
         print(constants);
 

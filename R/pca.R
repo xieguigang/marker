@@ -1,18 +1,18 @@
 #' @title PCA Analysis and Visualization
 #'
-#' @description This function performs Principal Component Analysis (PCA) on a numeric data matrix, 
-#' generates a score plot visualizing the first two principal components, and saves the plot to a specified directory. 
-#' The function includes data standardization, PCA computation using singular value decomposition, 
+#' @description This function performs Principal Component Analysis (PCA) on a numeric data matrix,
+#' generates a score plot visualizing the first two principal components, and saves the plot to a specified directory.
+#' The function includes data standardization, PCA computation using singular value decomposition,
 #' and visualization with ggplot2 including confidence ellipses and variance explained labels.
 #'
 #' importFrom stats prcomp scale
-#' 
-#' @param df A data frame containing the data for PCA analysis. Must include a column named 'class' 
+#'
+#' @param df A data frame containing the data for PCA analysis. Must include a column named 'class'
 #'        containing categorical labels for grouping, with all other columns being numeric variables.
 #' @param dirsave A character string specifying the directory path where the PCA plot will be saved.
 #'
-#' @return Invisibly returns NULL. The primary output is a PNG file saved to the specified directory 
-#'         containing the PCA score plot. The plot displays samples colored by their class membership 
+#' @return Invisibly returns NULL. The primary output is a PNG file saved to the specified directory
+#'         containing the PCA score plot. The plot displays samples colored by their class membership
 #'         with 95% confidence ellipses and variance explained percentages on the axes.
 #'
 #' @examples
@@ -24,7 +24,7 @@
 #' }
 #'
 #' @importFrom dplyr %>% select
-#' @importFrom ggplot2 ggplot aes geom_point stat_ellipse labs scale_color_manual 
+#' @importFrom ggplot2 ggplot aes geom_point stat_ellipse labs scale_color_manual
 #' @importFrom ggplot2 theme_minimal theme geom_hline geom_vline ggsave
 #' @export
 plot_pca = function(df, dirsave) {
@@ -63,6 +63,8 @@ plot_pca = function(df, dirsave) {
         ) +
         geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
         geom_vline(xintercept = 0, linetype = "dashed", color = "grey50")
+
+    dir.create(dirsave);
 
     # 6. 保存结果（可选）
     ggsave(file.path(dirsave, "PCA_plot.png"), width = 8, height = 6, dpi = 300);

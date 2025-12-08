@@ -7,20 +7,20 @@
 plot_pca(df, dirsave)
 }
 \arguments{
-\item{df}{A data frame containing the data for PCA analysis. Must include a column named 'class' 
+\item{df}{A data frame containing the data for PCA analysis. Must include a column named 'class'
 containing categorical labels for grouping, with all other columns being numeric variables.}
 
 \item{dirsave}{A character string specifying the directory path where the PCA plot will be saved.}
 }
 \value{
-Invisibly returns NULL. The primary output is a PNG file saved to the specified directory 
-        containing the PCA score plot. The plot displays samples colored by their class membership 
+Invisibly returns NULL. The primary output is a PNG file saved to the specified directory
+        containing the PCA score plot. The plot displays samples colored by their class membership
         with 95% confidence ellipses and variance explained percentages on the axes.
 }
 \description{
-This function performs Principal Component Analysis (PCA) on a numeric data matrix, 
-generates a score plot visualizing the first two principal components, and saves the plot to a specified directory. 
-The function includes data standardization, PCA computation using singular value decomposition, 
+This function performs Principal Component Analysis (PCA) on a numeric data matrix,
+generates a score plot visualizing the first two principal components, and saves the plot to a specified directory.
+The function includes data standardization, PCA computation using singular value decomposition,
 and visualization with ggplot2 including confidence ellipses and variance explained labels.
 
 importFrom stats prcomp scale

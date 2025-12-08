@@ -241,6 +241,8 @@ single_linear = function(data, CON, Treatment, save_dir, top_plots = 50) {
             theme_minimal() +
             theme(legend.position = "none")
 
+        dir.create(save_dir);
+
         # 保存条形图
         ggsave(file.path(save_dir, "Barplots", paste0(metab_name, "_barplot.pdf")),
                p_bar, width = 6, height = 5)

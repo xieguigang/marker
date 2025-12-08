@@ -611,10 +611,12 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
 
     # 重构模型为rms格式
     lrm_model <- lrm(formula, data = dX, x = TRUE, y = TRUE)
-    nom <- nomogram(lrm_model, fun = plogis, funlabel = "Risk Probability")
-    plot(nom,xfrac = 0.1,cex.var = 1.5, cex.axis = 0.85   )
-    dev.off();
 
+    try({
+        nom <- nomogram(lrm_model, fun = plogis, funlabel = "Risk Probability")
+        plot(nom,xfrac = 0.1,cex.var = 1.5, cex.axis = 0.85   )
+        dev.off();
+    });
 
     shap_dir = file.path(save_dir,"shap_analysis");
     dir.create(shap_dir, showWarnings = FALSE, recursive = TRUE);
