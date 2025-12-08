@@ -254,7 +254,7 @@ single_linear = function(data, CON, Treatment, save_dir, top_plots = 50) {
                  x = "False Positive Rate", y = "True Positive Rate") +
             theme_minimal() + 
              # 添加以下行以实现平滑，并隐藏原始锯齿状路径
-            geom_smooth(aes(ymax = after_scale(y), ymin = after_scale(y), group = group), # 确保按分组平滑
+            geom_smooth(aes(ymax = after_scale(y), ymin = after_scale(y)), # 确保按分组平滑
                         se = FALSE,         # 不绘制置信区间
                         method = "loess",   # 使用loess方法进行平滑
                         size = 1.2) +       # 设置平滑曲线的粗细
