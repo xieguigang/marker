@@ -252,7 +252,13 @@ single_linear = function(data, CON, Treatment, save_dir, top_plots = 50) {
             geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray") +
             labs(title = paste0(metab_name, " (AUC = ", round(roc_info$auc, 3), ")"),
                  x = "False Positive Rate", y = "True Positive Rate") +
-            theme_minimal()
+            theme_minimal() + 
+             # 添加以下行以实现平滑，并隐藏原始锯齿状路径
+            geom_smooth(aes(ymax = after_scale(y), ymin = after_scale(y), group = group), # 确保按分组平滑
+                        se = FALSE,         # 不绘制置信区间
+                        method = "loess",   # 使用loess方法进行平滑
+                        size = 1.2) +       # 设置平滑曲线的粗细
+            geom_path(size = 0)             # 将原始路径的粗细设为0，使其不可见
 
         ggsave(file.path(save_dir, "Individual_ROCs", paste0(metab_name, "_ROC.pdf")),
                p_roc, width = 6, height = 4)
@@ -271,7 +277,14 @@ single_linear = function(data, CON, Treatment, save_dir, top_plots = 50) {
                  color = "Metabolite") +
             theme_minimal() +
             scale_color_discrete(labels = paste0(names(top10_rocs), " (AUC=",
-                                                 round(sapply(top10_rocs, auc), 3), ")"))
+                                                 round(sapply(top10_rocs, auc), 3), ")")) + 
+            # 添加以下行以实现平滑，并隐藏原始锯齿状路径
+            geom_smooth(aes(ymax = after_scale(y), ymin = after_scale(y), group = group), # 确保按分组平滑
+                        se = FALSE,         # 不绘制置信区间
+                        method = "loess",   # 使用loess方法进行平滑
+                        size = 1.2) +       # 设置平滑曲线的粗细
+            geom_path(size = 0)             # 将原始路径的粗细设为0，使其不可见
+
         ggsave(file.path(save_dir, "Top10_ROCs_Combined.pdf"), p_combined, width = 8, height = 6)
     }
 

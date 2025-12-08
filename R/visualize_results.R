@@ -151,8 +151,8 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
     pred_prob <- predict(nomogram_model, X[,top_features], type = "response");
     train_prob <- predict(nomogram_model,train_data[, top_features], type="response");
     # 绘制ROC曲线
-    roc_obj <- roc(dX$class, pred_prob)
-    train_roc <- roc(train_data$class, train_prob);
+    roc_obj <- roc(dX$class, pred_prob, smooth = TRUE)
+    train_roc <- roc(train_data$class, train_prob, smooth = TRUE);
     roc_nomogram <- roc_obj;
     evl_nomogram <- evaluate_model(dX$class, pred_prob);
     print(pred_prob);
@@ -192,8 +192,8 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
     train_prob <- predict(xgb_model,as.matrix(train_data[,top_features]));
 
     # 绘制ROC曲线
-    train_roc <- roc(train_data$class, train_prob);
-    roc_obj <- roc(dX$class, pred_prob)
+    train_roc <- roc(train_data$class, train_prob, smooth = TRUE);
+    roc_obj <- roc(dX$class, pred_prob, smooth = TRUE)
     roc_xgb <- roc_obj;
     evl_xgb <- evaluate_model(dX$class, pred_prob);
     print(pred_prob);
@@ -232,8 +232,8 @@ visualize_results <- function(results, X, y,top_features, save_dir) {
     pred_prob <- predict(rf_model, as.matrix( X[,top_features]));
     train_prob <- predict(rf_model, as.matrix( train_data[,top_features]));
     # 绘制ROC曲线
-    train_roc <- roc(train_data$class, train_prob);
-    roc_obj <- roc(dX$class, pred_prob)
+    train_roc <- roc(train_data$class, train_prob, smooth = TRUE);
+    roc_obj <- roc(dX$class, pred_prob, smooth = TRUE)
     roc_rf <- roc_obj
     evl_rf <- evaluate_model(dX$class, pred_prob);
     print(pred_prob);
