@@ -21,6 +21,7 @@
 
 .onLoad <- function(libname, pkgname) {
     message("Employing multiple machine learning methods for biomarker discovery and disease prediction model construction.");
-    
+    message("github: https://github.com/xieguigang/marker");
+
     .requires();
 }
