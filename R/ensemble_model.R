@@ -88,8 +88,10 @@ ensemble_model <- function(X, y, selected_features, save_dir) {
     dX = as.data.frame(X);
     dX = dX[,selected_features];
     dX[,"class"] <- as.numeric( y) -1;
-    nomogram_model <- glm(formula, family = "binomial", data = dX)
 
+    message("make glm regression...");
+    nomogram_model <- glm(formula, family = "binomial", data = dX)
+    message("make xgboost model...");
     xgb_model <- xgboost(
         data = as.matrix(dX[,selected_features]),
         label = dX$class,
@@ -97,7 +99,7 @@ ensemble_model <- function(X, y, selected_features, save_dir) {
         objective = "binary:logistic",
         eval_metric = "logloss"
     )
-
+    message("make random forest model...");
     # 训练随机森林
     rf_model <- randomForest(
         x = as.matrix(dX[,selected_features]),
