@@ -93,3 +93,15 @@ dataframe = function(data) {
         stop("the given input data can not be cast as dataframe table!");
     }
 }
+
+safe_read_csv = function(file) {
+    # 先读入，不带行名
+    df <- read.csv(file, row.names = NULL, check.names = FALSE);
+    # 假设原来的第 1 列名是 "SampleID"
+    # 用 make.unique 生成唯一名字（重复的会自动加后缀 .1, .2 ...）
+    unique_ids <- make.unique(df[,1]);
+    # 把这个唯一 ID 设为行名
+    rownames(df) <- unique_ids;
+
+    df[, -1, drop = FALSE];
+}
