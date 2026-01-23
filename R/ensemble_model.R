@@ -89,12 +89,15 @@ ensemble_model <- function(X, y, selected_features, save_dir) {
     dX = dX[,selected_features];
     dX[,"class"] <- as.numeric( y) -1;
 
+    message("inspect of the labels y:");
+    print(table(y));
+
     message("make glm regression...");
     nomogram_model <- glm(formula, family = "binomial", data = dX)
     message("make xgboost model...");
     xgb_model <- xgboost(
         data = as.matrix(dX[,selected_features]),
-        label = dX$class,
+        label = as.logical(dX$class),
         nrounds = 100,
         objective = "binary:logistic",
         eval_metric = "logloss"
