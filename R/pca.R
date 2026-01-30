@@ -44,22 +44,32 @@ plot_pca = function(df, dirsave) {
     pc_scores$class <- class_labels  # 添加分类标签
     variance <- summary(pca_result)$importance[2, 1:2] * 100  # 计算方差贡献率
 
+    # ====== 颜色设置 (修改部分) ======
+    # 计算唯一分类的数量
+    n_classes <- length(unique(pc_scores$class))
+    
+    # 动态生成颜色 (使用 hcl.colors，支持任意数量的分类)
+    # "Set3" 是一个配色方案，也可以尝试 "Dynamic", "Pastel1" 等
+    my_colors <- hcl.colors(n_classes, palette = "Set3")
+
     # ====== 可视化 ======
     # 5. 绘制PCA得分图
     ggplot(pc_scores, aes(x = PC1, y = PC2, color = class)) +
         geom_point(size = 3, alpha = 0.8) +  # 绘制样本点
-        stat_ellipse(level = 0.95, linewidth = 1) +  # 添加95%置信椭圆
+        stat_ellipse(level = 0.95, linewidth = 1, show.legend = FALSE) +  # 添加95%置信椭圆 (注意：类别太多时椭圆可能会重叠严重，可选择去掉)
         labs(title = "PCA Score Plot",
-             x = paste0("PC1 (", round(variance[1], 1), "%)"),
-             y = paste0("PC2 (", round(variance[2], 1), "%)")) +
-        scale_color_manual(values = c("#E41A1C", "#377EB8", "#4DAF4A")) +  # 自定义颜色
+            x = paste0("PC1 (", round(variance[1], 1), "%)"),
+            y = paste0("PC2 (", round(variance[2], 1), "%)")) +
+        # 关键修改：使用动态生成的 my_colors 替代原本的固定 3 个颜色
+        scale_color_manual(values = my_colors) +  
         theme_minimal(base_size = 12) +
         theme(
-            panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
-            panel.grid.minor = element_blank(),
-            panel.border = element_rect(fill = NA, color = "black", linewidth = 0.8),
-            legend.position = "right",
-            plot.title = element_text(hjust = 0.5, face = "bold")
+        panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
+        panel.grid.minor = element_blank(),
+        panel.border = element_rect(fill = NA, color = "black", linewidth = 0.8),
+        legend.position = "right",
+        # 如果分类太多，图例可能会挡住图，可以尝试将 legend.position 设为 "none"
+        plot.title = element_text(hjust = 0.5, face = "bold")
         ) +
         geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
         geom_vline(xintercept = 0, linetype = "dashed", color = "grey50")
@@ -68,6 +78,7 @@ plot_pca = function(df, dirsave) {
 
     # 6. 保存结果（可选）
     ggsave(file.path(dirsave, "PCA_plot.png"), width = 8, height = 6, dpi = 300);
+    ggsave(file.path(dirsave, "PCA_plot.pdf"), width = 8, height = 6);
 
     writeLines(as.character( variance), con = file.path(dirsave,"PCA_importance.txt"));
     write.csv(pc_scores, file = file.path(dirsave,"PCA_scores.csv"));
